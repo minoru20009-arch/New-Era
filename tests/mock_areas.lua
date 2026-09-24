@@ -62,8 +62,9 @@ function A.install(M)
         self.container = args.container or G.ROOM
     end
     function Node:draw_boundingrect() end
+    -- like the game: the collision box is CT (T for nodes; VT for cards, see Card:init)
     function Node:collides_with_point(p)
-        local T = self.T
+        local T = self.CT or self.T
         return p.x >= T.x and p.y >= T.y and p.x <= T.x + T.w and p.y <= T.y + T.h
     end
     function Node:stop_drag() end
@@ -246,6 +247,7 @@ function A.install(M)
         self.T.scale = 0.95
         self.VT.scale = 0.95
         self.original_T = { scale = 0.95 }
+        self.CT = self.VT -- Card:init: cards collide with their visual transform
         self.facing = 'front'
         self.playing_card = true
         proto = proto or {}

@@ -617,10 +617,16 @@ return function(T)
         eq(order[3], b, 'hovered card drawn last')
         G.CONTROLLER.hovering.target = nil
 
+        -- the visual transform reaches the target (the game eases VT to T over a few frames)
+        G.play:hard_set_cards()
         local L = Board.get_layout().slots[12]
         check(a:collides_with_point({ x = L.x + L.w / 2, y = L.y + L.h / 2 }), 'hit inside the drawn card')
-        check(not a:collides_with_point({ x = a.T.x + 0.02, y = a.T.y + 0.02 }), 'no hit in the unscaled box corner')
-        eq(a.T.w, G.CARD_W, 'box restored after the test')
+        check(not a:collides_with_point({ x = a.VT.x + 0.02, y = a.VT.y + 0.02 }), 'no hit in the unscaled box corner')
+        check(not a:collides_with_point({ x = L.x + L.w / 2, y = L.y - 0.1 }), 'no hit just above the drawn card')
+        check(a:collides_with_point({ x = L.x + L.w / 2, y = L.y + 0.05 }), 'hit at the top edge of the drawn card')
+        check(not a:collides_with_point({ x = L.x + L.w / 2, y = L.y + L.h + 0.1 }), 'no hit just below the drawn card')
+        eq(a.VT.w, G.CARD_W, 'box restored after the test')
+        eq(a.VT.y, a.T.y, 'box position restored')
 
         G.GAME.facing_blind = nil
         M.drawhash = {}

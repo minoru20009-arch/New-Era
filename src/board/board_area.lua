@@ -778,12 +778,14 @@ function CardArea:draw()
 end
 
 -- Cards drawn smaller than their box (board cards, staged cards): collide with the drawn size,
--- so a card never catches the cursor over the card in front of it.
+-- so a card never catches the cursor above its picture or over the card in front of it.
+-- Cards collide with their collision transform CT, which Card:init sets to the visual
+-- transform VT (not T): that box is shrunk around its centre for the duration of the check.
 local collides_ref = Card.collides_with_point
 function Card:collides_with_point(point)
     local k = self.ne_board_scale
     if not k then return collides_ref(self, point) end
-    local T = self.T
+    local T = self.CT or self.T
     local x, y, w, h = T.x, T.y, T.w, T.h
     T.x, T.y, T.w, T.h = x + w * (1 - k) / 2, y + h * (1 - k) / 2, w * k, h * k
     local ok, res = pcall(collides_ref, self, point)
