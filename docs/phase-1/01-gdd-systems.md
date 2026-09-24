@@ -56,7 +56,10 @@ Semua pola dihitung sekali saat load (tabel indeks statis):
 | Kompas | petak tengah + 4 tetangga ortogonal (pusat hanya di Baris Tengah kolom 2–4) | 3 |
 | Papan penuh | 15 petak | 1 |
 
-**Aktivasi:** sebuah pola hanya diperiksa jika memuat **minimal satu kartu yang baru ditempatkan** di tangan ini. Pengecualian: *Gerbang Surga* selalu memeriksa papan penuh. Jadi residu tidak memicu formasi yang sama berulang-ulang.
+**Aktivasi:** sebuah pola hanya diperiksa jika memuat **minimal satu kartu yang baru ditempatkan** di tangan ini. Jadi residu tidak memicu formasi yang sama berulang-ulang.
+- Formasi gabungan (Tautan Ganda, Tautan Penuh) disusun dari pola yang masing-masing aktif.
+- Pengecualian: *Gerbang Surga* memeriksa papan penuh (cukup satu kartu baru di mana saja). Baris-barisnya tidak perlu memuat kartu baru.
+- Formasi baris hanya ada pada papan yang lebarnya minimal 3 kolom (papan hasil resize). Pada papan selebar 4 kolom, "5 kartu" berarti satu baris penuh.
 
 ### 1.4 Daftar formasi (17)
 
@@ -83,24 +86,33 @@ Semua formasi didaftarkan sebagai `SMODS.PokerHand` dengan key `ne_*`. Kolom "Le
 | 17 | `ne_spark` | Percikan / Spark | Tidak ada formasi; yang dicetak hanya kartu baru dengan rank tertinggi | 5 × 1 | +10 / +1 | Proxima |
 
 Catatan:
-- Kartu **Wild**/"semua suit" dan efek seperti Four Fingers vanilla tetap berlaku lewat primitif `get_flush`/`get_straight` yang dipakai ulang di dalam evaluator.
-- Formasi ber-tema (Pakta Neraka, Garis Halo) memberi ☠+3 / ✦+2 setiap kali dimainkan.
+- **Suit** memakai aturan flush game (`Card:is_suit(suit, nil, true)`): kartu **Wild** cocok dengan semua suit (termasuk efek Smeared). Kartu **Stone** tidak punya rank maupun suit.
+- **Rank** memakai `get_id` (2–14). Pada formasi berurut, As boleh tinggi atau rendah, tetapi tidak sekaligus (K-A-2 tidak sah).
+- Perubahan Fase 6: `get_flush`/`get_straight` vanilla **tidak** dipakai. Keduanya butuh 4–5 kartu dan mengabaikan urutan posisi di papan. Efek Four Fingers/Shortcut tidak berlaku untuk formasi (joker vanilla memang disembunyikan).
+- Formasi ber-tema (Pakta Neraka, Garis Halo) memberi ☠+3 / ✦+2 setiap kali menjadi bagian rantai yang dimainkan.
 
 ### 1.5 Rantai formasi (banyak formasi dalam satu tangan)
 
-- Evaluator mengumpulkan **semua** formasi yang aktif, lalu mengurutkannya berdasarkan prioritas.
+- Evaluator mengumpulkan **semua** formasi yang aktif (semuanya tampil di `context.poker_hands` untuk joker), lalu mengurutkannya berdasarkan prioritas.
 - **Formasi Utama** = formasi prioritas tertinggi. Chips/Mult dasarnya dipakai seperti poker hand vanilla (`scoring_name`).
-- **Formasi Sekunder**: hingga batas **Formation Cap** (dasar 3 formasi total). Masing-masing menambah **50%** chips dan mult dasarnya (sesuai level) pada fase Rantai. Joker dapat menaikkan persentase ini atau batasnya.
+- **Formasi Sekunder**: hingga batas **Formation Cap** (dasar 3 formasi total, aturan `ne_formation_cap`). Masing-masing menambah **50%** chips dan mult dasarnya (sesuai level) pada fase Rantai (aturan `ne_chain_pct`). Joker dapat menaikkan persentase ini atau batasnya.
+- Aturan rantai (keputusan Fase 6):
+  - **Satu formasi per jenis.** Dua Triad di papan tetap dihitung satu Triad. Dua Tautan Kembar terpisah sudah berupa Tautan Ganda.
+  - Formasi Sekunder harus **menambah minimal satu kartu** yang belum dihitung. Tautan Kembar di dalam Triad tidak dihitung lagi, tetapi Tangga yang menyambung Triad dihitung.
+  - Jika satu jenis ada di beberapa posisi, yang dipakai adalah posisi yang menambah kartu terbanyak. Jika seri: kartu baru terbanyak, lalu rank tertinggi, lalu petak paling awal.
+  - Percikan hanya muncul jika tidak ada formasi lain.
 - Satu kartu boleh menjadi anggota beberapa formasi. Kartu itu tetap dicetak **sekali** (joker tertentu mengubahnya).
 - `scoring_hand` = gabungan semua kartu formasi yang dihitung. Kartu papan lain = `unscored`.
+- Hanya Formasi Utama yang tercatat "dimainkan" (jumlah main di Run Info, level The Ox).
 - Teks tampilan: `Utama + Sekunder1 + Sekunder2`.
 
 ### 1.6 Level, planet, dan UI
 
 - Level per formasi disimpan di `G.GAME.hands[key]` (mekanisme SMODS, ikut save otomatis).
-- 17 planet baru (set `Planet`) dengan `config.hand_type = key formasi`. Blue Seal, Telescope, Observatory, Black Hole, dan Celestial Pack otomatis bekerja karena memakai `config.hand_type` (terverifikasi di Fase 0).
-- Menu Run Info → tab Hands: tiap baris formasi mendapat **diagram mini 5×3** yang menyorot pola (digambar prosedural).
-- `most_played_poker_hand` default diubah dari `'High Card'` ke `ne_spark`.
+- 17 planet baru (set `Planet`) dengan `config.hand_type = key formasi`. Blue Seal, Telescope, Observatory, Black Hole, dan Celestial Pack otomatis bekerja karena memakai `config.hand_type` (terverifikasi di Fase 0). Semua planet langsung ada di pool (tanpa *softlock*). Planet vanilla disembunyikan (config, default menyala sejak Fase 6).
+- Menu Run Info → tab Hands (dan koleksi): tiap baris formasi mendapat **diagram mini 5×3** yang menyorot satu contoh pola (kotak UI biasa, tanpa tekstur). Diagram yang sama tergambar di sprite planetnya.
+- Poker hand vanilla tetap terdaftar tetapi tidak pernah cocok dan disembunyikan (Run Info dan koleksi).
+- `most_played_poker_hand` default diubah dari `'High Card'` ke `ne_spark`, dan hanya formasi yang dihitung (patch L12).
 
 ---
 

@@ -1,0 +1,30 @@
+# New Era - formations (src/formation/). The vanilla poker hands are hidden and never match, so the
+# "most played hand" picked at the end of a Boss blind (used by The Ox and its description) must
+# be a formation: the default becomes Spark and only formations are counted.
+# Priority 0: applied after Steamodded (-10/-5); Steamodded does not change these lines.
+# Every payload is nil-safe: if New Era failed to load, the original behaviour remains.
+
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# L12a - end_round: default most played hand.
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local _handname, _played, _order = 'High Card', -1, 100"
+position = "at"
+payload = "local _handname, _played, _order = (NE and NE.Formation and NE.Formation.DEFAULT_HAND) or 'High Card', -1, 100"
+match_indent = true
+times = 1
+
+# L12b - end_round: only formations count as the most played hand.
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "if v.played > _played or (v.played == _played and _order > v.order) then"
+position = "at"
+payload = "if (not (NE and NE.Formation) or NE.Formation.counts_as_most_played(k)) and (v.played > _played or (v.played == _played and _order > v.order)) then"
+match_indent = true
+times = 1

@@ -49,7 +49,16 @@ function Board.stage_card(card, slot)
     Board.stage[card] = slot
     Board.bump()
     play_sound('cardSlide1')
+    Board.refresh_preview()
     return true
+end
+
+-- Re-evaluates the hand preview (formation name, chips, mult) after the placement changed
+-- without a change of the selection: positions matter for formations.
+function Board.refresh_preview()
+    if G.hand and G.STATE == G.STATES.SELECTING_HAND and G.hand.highlighted[1] then
+        G.hand:parse_highlighted()
+    end
 end
 
 -- Returns a staged card to the hand at `index` (default: where it came from). The card stays
@@ -127,8 +136,12 @@ function Card:stop_drag()
         local slot, occupied = Board.drop_slot(self)
         if slot and not occupied then
             Board.stage_card(self, slot)
-        elseif not slot and Board.stage[self] then
-            Board.unstage(self, Board.hand_index_at(self.T.x + self.T.w / 2, self))
+        else
+            if not slot and Board.stage[self] then
+                Board.unstage(self, Board.hand_index_at(self.T.x + self.T.w / 2, self))
+            end
+            -- the hand order decides where quick play puts the other selected cards
+            Board.refresh_preview()
         end
     end
     return ret

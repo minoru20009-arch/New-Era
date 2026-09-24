@@ -32,6 +32,12 @@ local MODULES = {
     'src/board/board_area.lua',
     'src/board/placement.lua',
     'src/board/controller.lua',
+    -- formations (the board's poker hands)
+    'src/formation/patterns.lua',
+    'src/formation/evaluator.lua',
+    'src/formation/formations.lua',
+    'src/formation/planets.lua',
+    'src/formation/ui_diagram.lua',
     -- scoring
     'src/scoring/operators.lua',
     'src/scoring/aura.lua',

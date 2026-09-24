@@ -2,8 +2,8 @@
 -- `if context.ne_omen then ... end` and return normal effects:
 --
 --   ne_omen       after Play is pressed, played cards already in G.play, before evaluation
---   ne_chain      once per secondary formation, at the start of scoring (Phase 6 supplies
---                 the formations; until then the phase is reached with 0 secondaries)
+--   ne_chain      once per Secondary formation, at the start of scoring, right after that
+--                 formation's Chain bonus (context.ne_formation = { key, cards, slots })
 --   ne_ascension  after every joker (end of final_scoring_step), before the score is taken
 --   ne_judgment   after the hand score is known: context.score, context.total (round score
 --                 after this hand), context.overkill (amount above the blind target, >= 0)
@@ -23,8 +23,10 @@ Phases.ORDER = { 'omen', 'chain', 'ascension', 'judgment' }
 -- Phase trace of the current and the previous hand (shown in the F9 overlay).
 Phases.trace = Phases.trace or { current = {}, last = '' }
 
--- Phase 6 replaces this with the formation evaluator's secondary formations.
+-- Secondary formations of the played hand and the Chain bonus of one of them; set by
+-- formation/formations.lua (no chain without formations).
 Phases.secondaries = Phases.secondaries or function(context) return {} end
+Phases.chain_step = Phases.chain_step or function(formation, index, context) end
 
 local function trace(entry)
     local cur = Phases.trace.current
@@ -78,6 +80,10 @@ NE.Hooks.on_context('initial_scoring_step', 'phase_chain', function(context)
     end
     trace('chain(' .. #list .. ')')
     for i, formation in ipairs(list) do
+        local ok, err = pcall(Phases.chain_step, formation, i, context)
+        if not ok then
+            NE.log.warn_once('phase_chain_step', 'Chain bonus failed: %s', tostring(err))
+        end
         local fields = hand_fields(context, {})
         fields.ne_formation = formation
         fields.ne_chain_index = i

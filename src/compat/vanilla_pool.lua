@@ -28,9 +28,19 @@ Pool.FALLBACK = {
 }
 
 -- A category is only hidden once New Era has replacements for it; otherwise empty pools
--- would make the game fall back to (or crash on) missing content. Later phases flip these:
--- planets in Phase 6 (formations), blinds in Phase 10 (procedural bosses).
-Pool.READY = Pool.READY or { jokers = true, planets = false, blinds = false }
+-- would make the game fall back to (or crash on) missing content. Blinds are flipped in
+-- Phase 10 (procedural bosses).
+Pool.READY = Pool.READY or { jokers = true, planets = true, blinds = false }
+
+-- Phase 6: the planets option now has an effect and defaults to on. Configs saved earlier
+-- (when it did nothing, default off) are switched on once.
+do
+    local cfg = NE.cfg()
+    if type(cfg.hide_vanilla) == 'table' and not cfg.ne_planets_migrated then
+        cfg.hide_vanilla.planets = true
+        cfg.ne_planets_migrated = true
+    end
+end
 
 function Pool.hidden(category)
     if not Pool.READY[category] then return false end

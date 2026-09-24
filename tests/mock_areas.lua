@@ -179,7 +179,8 @@ function A.install(M)
     function CardArea:parse_highlighted()
         M.parsed = {}
         for i, c in ipairs(self.highlighted) do M.parsed[i] = c end
-        G.FUNCS.get_poker_hand_info(self.highlighted)
+        local text, disp, poker_hands, scoring = G.FUNCS.get_poker_hand_info(self.highlighted)
+        M.preview = { text = text, disp = disp, poker_hands = poker_hands, scoring = scoring }
     end
     function CardArea:set_ranks()
         for k, card in ipairs(self.cards) do
@@ -453,6 +454,18 @@ G.FUNCS.draw_from_hand_to_discard = function(e)
     for i = 1, hand_count do
         draw_card(G.hand, G.discard, i * 100 / hand_count, 'down', nil, nil, 0.07)
     end
+end
+
+-- end_round: the most played hand at the end of a Boss blind
+function test_most_played()
+                    local _handname, _played, _order = 'High Card', -1, 100
+                    for k, v in pairs(G.GAME.hands) do
+                        if v.played > _played or (v.played == _played and _order > v.order) then 
+                            _played = v.played
+                            _handname = k
+                        end
+                    end
+                    G.GAME.current_round.most_played_poker_hand = _handname
 end
 ]],
     ['card.lua'] = [[

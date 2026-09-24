@@ -9,7 +9,7 @@ return {
                     'and 121 crossover jokers in three ranks:',
                     '{C:inactive}Unranked{}, {C:red}Demonic{} and {C:gold}Heavenly{}.',
                     ' ',
-                    '{C:inactive}Development build (Phase 5: board).{}',
+                    '{C:inactive}Development build (Phase 6: formations).{}',
                 },
             },
         },
@@ -85,8 +85,259 @@ return {
                 },
             },
         },
+        Planet = {
+            c_ne_empyrea = {
+                name = 'Empyrea',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult and',
+                    '{C:chips}+#4#{} chips',
+                },
+            },
+            c_ne_polaris = {
+                name = 'Polaris',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult and',
+                    '{C:chips}+#4#{} chips',
+                },
+            },
+            c_ne_andromeda = {
+                name = 'Andromeda',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult and',
+                    '{C:chips}+#4#{} chips',
+                },
+            },
+            c_ne_pegasus = {
+                name = 'Pegasus',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult and',
+                    '{C:chips}+#4#{} chips',
+                },
+            },
+            c_ne_nibiru = {
+                name = 'Nibiru',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult and',
+                    '{C:chips}+#4#{} chips',
+                },
+            },
+            c_ne_sirius = {
+                name = 'Sirius',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult and',
+                    '{C:chips}+#4#{} chips',
+                },
+            },
+            c_ne_crux = {
+                name = 'Crux',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult and',
+                    '{C:chips}+#4#{} chips',
+                },
+            },
+            c_ne_perseus = {
+                name = 'Perseus',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult and',
+                    '{C:chips}+#4#{} chips',
+                },
+            },
+            c_ne_cygnus = {
+                name = 'Cygnus',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult and',
+                    '{C:chips}+#4#{} chips',
+                },
+            },
+            c_ne_sagitta = {
+                name = 'Sagitta',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult and',
+                    '{C:chips}+#4#{} chips',
+                },
+            },
+            c_ne_draco = {
+                name = 'Draco',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult and',
+                    '{C:chips}+#4#{} chips',
+                },
+            },
+            c_ne_orion = {
+                name = 'Orion',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult and',
+                    '{C:chips}+#4#{} chips',
+                },
+            },
+            c_ne_aquila = {
+                name = 'Aquila',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult and',
+                    '{C:chips}+#4#{} chips',
+                },
+            },
+            c_ne_pollux = {
+                name = 'Pollux',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult and',
+                    '{C:chips}+#4#{} chips',
+                },
+            },
+            c_ne_lyra = {
+                name = 'Lyra',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult and',
+                    '{C:chips}+#4#{} chips',
+                },
+            },
+            c_ne_gemini = {
+                name = 'Gemini',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult and',
+                    '{C:chips}+#4#{} chips',
+                },
+            },
+            c_ne_proxima = {
+                name = 'Proxima',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Level up',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult and',
+                    '{C:chips}+#4#{} chips',
+                },
+            },
+        },
     },
     misc = {
+        poker_hands = {
+            ne_heavens_gate = 'Heaven\'s Gate',
+            ne_five_line = 'Five Line',
+            ne_royal_row = 'Royal Row',
+            ne_quad_square = 'Quad Square',
+            ne_hell_pact = 'Hell Pact',
+            ne_halo_line = 'Halo Line',
+            ne_compass = 'Compass',
+            ne_full_link = 'Full Link',
+            ne_row_flush = 'Row Flush',
+            ne_row_straight = 'Row Straight',
+            ne_bastion = 'Bastion',
+            ne_triad = 'Triad',
+            ne_ascent = 'Ascent',
+            ne_double_link = 'Double Link',
+            ne_kin_trio = 'Kin Trio',
+            ne_twin_link = 'Twin Link',
+            ne_spark = 'Spark',
+        },
+        poker_hand_descriptions = {
+            ne_heavens_gate = {
+                'A full board where every row',
+                'is a Five Line, Royal Row,',
+                'Row Flush or Row Straight',
+            },
+            ne_five_line = {
+                'A full row of cards',
+                'with the same rank',
+            },
+            ne_royal_row = {
+                'A full row of one suit',
+                'with consecutive ranks',
+                'left to right (up or down)',
+            },
+            ne_quad_square = {
+                'A 2x2 square of cards',
+                'with the same rank',
+            },
+            ne_hell_pact = {
+                '3 Demon cards in a line',
+                '(row, column or diagonal)',
+                'Gives +3 Corruption',
+            },
+            ne_halo_line = {
+                '3 Blessed cards in a line',
+                '(row, column or diagonal)',
+                'Gives +2 Divinity',
+            },
+            ne_compass = {
+                'A card and its 4 neighbours',
+                '(up, down, left, right)',
+                'all of the same suit',
+            },
+            ne_full_link = {
+                'A Triad and a Twin Link',
+                'that share no card',
+            },
+            ne_row_flush = {
+                'A full row of cards',
+                'of the same suit',
+            },
+            ne_row_straight = {
+                'A full row with consecutive',
+                'ranks left to right (up or down)',
+                'Ace counts high or low',
+            },
+            ne_bastion = {
+                'A 2x2 square of cards',
+                'of the same suit',
+            },
+            ne_triad = {
+                '3 cards with the same rank',
+                'in a line (row, column or diagonal)',
+            },
+            ne_ascent = {
+                '3 consecutive ranks in a line',
+                '(row, column or diagonal)',
+            },
+            ne_double_link = {
+                'Two Twin Links',
+                'that share no card',
+            },
+            ne_kin_trio = {
+                '3 cards of the same suit',
+                'in a line (row, column or diagonal)',
+            },
+            ne_twin_link = {
+                '2 neighbouring cards',
+                '(side by side or one above the other)',
+                'with the same rank',
+            },
+            ne_spark = {
+                'No formation: only the highest',
+                'card placed this hand scores',
+            },
+        },
         labels = {
             ne_unranked = 'Unranked',
             ne_demonic = 'Demonic',
@@ -121,7 +372,7 @@ return {
             ne_cfg_debug = 'Debug tools (F9 / F10)',
             ne_cfg_test_jokers = 'Test jokers in pools',
             ne_cfg_board_small = 'Smaller board cards',
-            ne_cfg_note = 'Planets/blinds take effect from Phase 6/10',
+            ne_cfg_note = 'Blinds take effect from Phase 10',
 
             ne_cheat_title = 'New Era cheats',
             ne_cheat_not_in_run = 'Start a run to use cheats',
@@ -150,6 +401,9 @@ return {
             ne_cheat_board_size = 'Board: size 5x3/6x4/4x2',
             ne_cheat_board_shuffle = 'Board: shuffle Residue',
             ne_cheat_board_clear = 'Board: clear',
+            ne_cheat_hand_preset = 'Hand: formation preset',
+            ne_cheat_level_formations = 'Formations: +1 level',
+            ne_cheat_give_planets = 'Give 2 planets',
 
             ne_msg_omen = 'Omen!',
             ne_msg_chain = 'Chain!',

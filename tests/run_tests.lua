@@ -83,19 +83,21 @@ test('pool hiding', function()
     eq(SMODS.add_to_pool(vanilla_joker), false, 'vanilla joker hidden')
     eq(SMODS.add_to_pool(ne_joker), true, 'New Era joker kept')
     eq(SMODS.add_to_pool(smods_owned), false, 'Steamodded-owned vanilla joker hidden')
-    eq(SMODS.add_to_pool(planet), true, 'planets visible by default')
-    eq(SMODS.add_to_pool(blind), true, 'blinds visible by default')
-    NE.config.hide_vanilla.planets = true
-    NE.config.hide_vanilla.blinds = true
-    eq(SMODS.add_to_pool(planet), true, 'planet still shown until replacements are ready')
-    eq(SMODS.add_to_pool(blind), true, 'blind still shown until replacements are ready')
-    NE.Pool.READY.planets = true
-    NE.Pool.READY.blinds = true
-    eq(SMODS.add_to_pool(planet), false, 'planet hidden when enabled and ready')
-    eq(SMODS.add_to_pool(blind), false, 'blind hidden when enabled and ready')
-    NE.Pool.READY.planets = false
-    NE.Pool.READY.blinds = false
+    -- Phase 6: formation planets exist, so vanilla planets are hidden by default
+    eq(NE.Pool.READY.planets, true, 'planets ready (Phase 6)')
+    eq(NE.config.hide_vanilla.planets, true, 'hide planets on by default')
+    eq(NE.config.ne_planets_migrated, true, 'planet option migrated once')
+    eq(SMODS.add_to_pool(planet), false, 'vanilla planets hidden by default')
+    eq(SMODS.add_to_pool({ key = 'c_ne_orion', set = 'Planet', mod = { id = 'NewEra' } }), true, 'formation planet kept')
     NE.config.hide_vanilla.planets = false
+    eq(SMODS.add_to_pool(planet), true, 'vanilla planet shown when the option is off')
+    NE.config.hide_vanilla.planets = true
+    eq(SMODS.add_to_pool(blind), true, 'blinds visible by default')
+    NE.config.hide_vanilla.blinds = true
+    eq(SMODS.add_to_pool(blind), true, 'blind still shown until replacements are ready')
+    NE.Pool.READY.blinds = true
+    eq(SMODS.add_to_pool(blind), false, 'blind hidden when enabled and ready')
+    NE.Pool.READY.blinds = false
     NE.config.hide_vanilla.blinds = false
     local custom = { key = 'j_z', set = 'Joker', mod = { id = 'NewEra' }, in_pool = function() return false end }
     eq(SMODS.add_to_pool(custom), false, 'original in_pool still respected')
@@ -346,6 +348,9 @@ scoring_spec({ test = test, check = check, eq = eq, M = M })
 -- Phase 5: board
 local board_spec = assert(loadfile(M.root .. '/tests/board_spec.lua'))()
 board_spec({ test = test, check = check, eq = eq, M = M })
+
+local formation_spec = assert(loadfile(M.root .. '/tests/formation_spec.lua'))()
+formation_spec({ test = test, check = check, eq = eq, M = M })
 
 print(('\n%d passed, %d failed'):format(passed, failed))
 os.exit(failed == 0 and 0 or 1)

@@ -51,6 +51,57 @@ function Debug.board_next_size()
     NE.Board.resize(sizes[next_i][1], sizes[next_i][2])
 end
 
+-- Hand presets for trying formations: the first cards in hand become these cards. With quick
+-- play (select them in this order, press Play) they land left to right in the Middle row.
+Debug.HAND_PRESETS = {
+    { name = 'Triad + Ascent', cards = { 'C_7', 'D_7', 'H_7', 'S_8', 'H_9' } },
+    { name = 'Full Link', cards = { 'S_4', 'H_4', 'D_4', 'C_K', 'H_K' } },
+    { name = 'Row Straight', cards = { 'S_5', 'H_6', 'D_7', 'C_8', 'S_9' } },
+    { name = 'Row Flush', cards = { 'H_2', 'H_5', 'H_9', 'H_J', 'H_K' } },
+    { name = 'Royal Row', cards = { 'S_9', 'S_T', 'S_J', 'S_Q', 'S_K' } },
+    { name = 'Quad Square (2x2)', cards = { 'S_Q', 'H_Q', 'C_Q', 'D_Q', 'S_2' } },
+    { name = 'Compass (+)', cards = { 'D_2', 'D_5', 'D_8', 'D_J', 'D_K' } },
+}
+Debug.preset_index = 0
+
+function Debug.hand_preset()
+    local hand = G.hand and G.hand.cards
+    if not (hand and hand[1]) then
+        play_sound('cancel')
+        return false
+    end
+    Debug.preset_index = Debug.preset_index % #Debug.HAND_PRESETS + 1
+    local preset = Debug.HAND_PRESETS[Debug.preset_index]
+    G.hand:unhighlight_all()
+    for i, key in ipairs(preset.cards) do
+        local card = hand[i]
+        if card and G.P_CARDS[key] then card:set_base(G.P_CARDS[key]) end
+    end
+    NE.log.info('Hand preset: %s', preset.name)
+    if attention_text then
+        attention_text({ text = preset.name, scale = 0.7, hold = 1.6, major = G.play, align = 'cm',
+            offset = { x = 0, y = 0 }, silent = true })
+    end
+    return true
+end
+
+function Debug.level_formations(n)
+    for _, key in ipairs(NE.Formation.ORDER) do
+        if G.GAME.hands[key] then level_up_hand(nil, key, true, n) end
+    end
+end
+
+function Debug.give_planets(n)
+    local area = G.consumeables
+    for _ = 1, n do
+        if not area or #area.cards >= area.config.card_limit then
+            play_sound('cancel')
+            return
+        end
+        SMODS.add_card({ set = 'Planet', area = area })
+    end
+end
+
 local function give_joker(key)
     if #G.jokers.cards >= G.jokers.config.card_limit then
         play_sound('cancel')
@@ -123,6 +174,10 @@ Debug.CHEATS = {
     { id = 'board_size', label = 'ne_cheat_board_size', available = board_ready, run = function() Debug.board_next_size() end },
     { id = 'board_shuffle', label = 'ne_cheat_board_shuffle', available = board_ready, run = function() NE.Board.shuffle_residues('ne_cheat') end },
     { id = 'board_clear', label = 'ne_cheat_board_clear', available = board_ready, run = function() NE.Board.clear_to_discard() end },
+    -- Phase 6: formations
+    { id = 'hand_preset', label = 'ne_cheat_hand_preset', available = board_ready, run = function() Debug.hand_preset() end },
+    { id = 'level_formations', label = 'ne_cheat_level_formations', run = function() Debug.level_formations(1) end },
+    { id = 'give_planets', label = 'ne_cheat_give_planets', run = function() Debug.give_planets(2) end },
 }
 
 Debug.CHEAT_COLUMNS = 3

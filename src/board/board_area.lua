@@ -427,8 +427,8 @@ end
 
 -- Hand end: Residue & limit (patch L14) -------------------------------------------------------------------
 
--- Which cards leave the board after a hand. Phase 6 replaces this with the formation cards;
--- until then the scored cards of the (vanilla) poker hand leave.
+-- Which cards leave the board after a hand: the scored cards, which are the cards of every
+-- formation counted in the chain (formation/formations.lua makes them the scoring_hand).
 Board.consumed_provider = Board.consumed_provider or function(context)
     return context and context.scoring_hand or {}
 end

@@ -335,20 +335,38 @@ function M.install_scoring()
     end
 
     -- jokers (G.jokers.cards, each { config = { center = def }, ability = ... }) then mods
+    -- returns the flags of the effects (Steamodded's amount_return_flags that New Era uses),
+    -- updating the context like SMODS.update_context_flags
     M.contexts = {}
+    local FLAG_KEYS = { 'replace_scoring_name', 'replace_display_name', 'replace_poker_hands' }
+    local function apply(eff, card, context, flags)
+        SMODS.calculate_effect(eff, card)
+        for _, k in ipairs(FLAG_KEYS) do
+            if eff[k] ~= nil then flags[k] = eff[k] end
+        end
+        if context.evaluate_poker_hand then
+            if eff.replace_scoring_name then
+                context.scoring_name = eff.replace_scoring_name
+                context.display_name = eff.replace_scoring_name
+            end
+            if eff.replace_display_name then context.display_name = eff.replace_display_name end
+        end
+    end
     SMODS.calculate_context = function(context)
         M.contexts[#M.contexts + 1] = context
+        local flags = {}
         for _, card in ipairs(G.jokers and G.jokers.cards or {}) do
             local center = card.config and card.config.center
             if center and center.calculate then
                 local eff = center:calculate(card, context)
-                if type(eff) == 'table' then SMODS.calculate_effect(eff, card) end
+                if type(eff) == 'table' then apply(eff, card, context, flags) end
             end
         end
         if NE and NE.mod and NE.mod.calculate then
             local eff = NE.mod.calculate(NE.mod, context)
-            if type(eff) == 'table' then SMODS.calculate_effect(eff, nil) end
+            if type(eff) == 'table' then apply(eff, nil, context, flags) end
         end
+        return flags
     end
 
     local CalcBase = {}
@@ -474,7 +492,11 @@ function M.install()
 
     -- game globals --------------------------------------------------------------------------
     HEX = function(h) return { h } end
-    localize = function(key)
+    localize = function(key, set)
+        if type(key) == 'string' and (set == 'poker_hands' or set == 'poker_hand_descriptions') then
+            local t = M.loc and M.loc.misc and M.loc.misc[set]
+            return (t and t[key]) or 'ERROR'
+        end
         if type(key) == 'table' and key.type == 'variable' then
             local v = M.loc and M.loc.misc and M.loc.misc.v_dictionary and M.loc.misc.v_dictionary[key.key]
             if not v then return 'ERROR' end
@@ -710,6 +732,10 @@ function M.install()
     G.CONTROLLER = Controller()
     for target, src in pairs(M.areas.patch_sources) do M.patch_sources[target] = src end
 
+    -- poker hands, planets and card rules (formations, Phase 6)
+    M.formations = require('mock_formations')
+    M.formations.install(M)
+
     -- game code that New Era patches, with lovely/*.toml applied (as Lovely does at start-up)
     M.load_patch_sources()
 
@@ -727,6 +753,7 @@ end
 function M.load_mod()
     local src = assert(read_file(M.root .. '/main.lua'))
     assert(loadstring(src, '=main.lua'))()
+    M.formations.inject()
 end
 
 -- Starts a run with real (mock) card areas and a board, selecting a hand in a blind.

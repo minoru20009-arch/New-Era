@@ -14,6 +14,7 @@ Mods/NewEra/
 │  ├─ 10_bignum.toml            # serialisasi, cek tipe, modulate_sound
 │  ├─ 20_states.toml            # state NE_MAP, dispatch update, rute toko/cashout
 │  ├─ 30_board.toml             # G.play → papan, guard play, buang residu
+│  ├─ 35_formations.toml        # most played hand = formasi (L12)
 │  ├─ 40_phases.toml            # sisipan fase Omen/Chain/Ascension/Judgment
 │  ├─ 50_blinds.toml            # cek menang/kalah → NE.Encounter
 │  └─ 60_render.toml            # shader background
@@ -35,10 +36,10 @@ Mods/NewEra/
 │  └─ debug/       keybinds.lua, cheats.lua, perf_overlay.lua
 ├─ assets/
 │  ├─ shaders/     ne_card.fs, ne_post.fs, ne_background.fs, ne_board.fs, ne_ui.fs
-│  ├─ 1x/ 2x/      ne_frames.png (3 bingkai tier + slot papan), icon.png
+│  ├─ 1x/ 2x/      ne_frames.png (bingkai tier), ne_planets.png (17 planet), icon.png
 │  └─ sounds/      (minimal; memakai suara vanilla sebisa mungkin)
 ├─ localization/   en-us.lua, id.lua
-└─ tests/          run_tests.lua (LuaJIT CLI), big_spec.lua, evaluator_spec.lua, mapgen_spec.lua
+└─ tests/          run_tests.lua (LuaJIT CLI), big_spec.lua, scoring_spec.lua, board_spec.lua, formation_spec.lua, mapgen_spec.lua
 ```
 
 `NewEra.json`:
@@ -165,19 +166,27 @@ Hanya ASCII (font pixel Balatro tidak dijamin punya `↑`). Hasil format di-cach
 - Pemeriksaan kartu habis di `Game:update_selecting_hand`: wrap Lua, **bukan** patch. Patch akan memanggil `end_round()` setiap frame; wrap memanggilnya paling banyak sekali per ronde, saat hanya Residu yang tersisa.
 - `G.FUNCS.can_play` di-wrap: nonaktif jika kartu terpilih melebihi petak kosong.
 - `G.FUNCS.draw_from_play_to_discard`: patch **L14** menambah `and not NE.Board.keeps(v)`.
-  - `keeps` diputuskan sekali per tangan, dari kartu yang mencetak skor (context `after`; Fase 6 menggantinya dengan kartu formasi lewat `Board.consumed_provider`).
+  - `keeps` diputuskan sekali per tangan, dari kartu yang mencetak skor (`context.scoring_hand` di context `after`, lewat `Board.consumed_provider`). Sejak Fase 6 itu adalah kartu semua formasi dalam rantai.
   - Batas Residu = petak − batas main; Residu tertua keluar lebih dulu.
 - Discard Residu: kartu papan yang dipilih ikut `G.hand.highlighted` selama fungsi discard vanilla berjalan, dan `CardArea:remove_card` mengambilnya dari `G.play`. Semua efek discard berlaku.
 - Akhir ronde: wrap `G.FUNCS.draw_from_hand_to_discard` membuang seluruh papan.
-- Pratinjau: `CardArea:parse_highlighted` untuk `G.hand` mengevaluasi Residu + kartu terpilih. Fase 6 menggantinya dengan evaluator formasi.
+- Pratinjau: `CardArea:parse_highlighted` untuk `G.hand` mengevaluasi Residu + kartu terpilih lewat evaluator formasi (§4.3). Karena posisi menentukan formasi, pratinjau juga dihitung ulang saat kartu ditempatkan, dikembalikan ke tangan, atau urutan tangan berubah (`Board.refresh_preview`), dan saat efek memindah Residu (`ne_board_changed`).
 
-### 4.3 Evaluator
+### 4.3 Evaluator (implementasi Fase 6)
 
-- Tabel pola statis dibangun saat load dan saat `resize` (pasangan, garis-3, baris, blok 2×2, kompas).
-- `evaluate(state)`: satu pass membaca rank/suit/flag per slot ke array datar (tanpa alokasi per panggilan; buffer dipakai ulang), lalu memeriksa hanya pola yang memuat slot baru. Kompleksitas ≈ jumlah pola (< 100) per evaluasi.
-- Hasil di-cache per `board_version` (bertambah setiap papan berubah).
-- Integrasi SMODS: setiap formasi = `SMODS.PokerHand` dengan `evaluate = function(parts, hand) return NE.Formation.cached(key) end`. `get_poker_hand_info` (override SMODS) tetap dipakai apa adanya; hasil rantai dimasukkan lewat context `evaluate_poker_hand` (`replace_display_name`).
-- Hand vanilla: `take_ownership` → `visible = false`, `evaluate` → `{}`.
+- `src/formation/patterns.lua`: tabel pola statis per ukuran papan, di-cache (pasangan, garis-3, baris, blok 2×2, kompas, papan penuh). Ukuran baru dari `resize` cukup membangun tabel baru.
+- `src/formation/evaluator.lua`:
+  - `Formation.read(cards)`: kartu yang dievaluasi diletakkan pada state papan (array datar per slot, dipakai ulang). Kartu papan memakai slotnya (baru kecuali Residu). Kartu staged memakai slot pesanannya. Kartu terpilih lain mendapat slot yang akan diberikan main cepat: urutan di `G.hand.cards`, petak kosong pertama dalam urutan isi, melewati kartu papan dan pesanan lain. Per slot tersimpan rank (`get_id`), bitmask suit (`is_suit` aturan flush), dan flag Iblis/Berkah.
+  - `Formation.run(state)`: logika murni (dites tanpa game). Semua formasi aktif dicatat, lalu rantai disusun (01 §1.5).
+  - Cache: jika state berikutnya sama persis (kartu, status baru, rank, suit, flag, ukuran, cap), hasil dipakai ulang. Ini lebih aman daripada `board_version`, karena tarot bisa mengubah kartu tanpa mengubah papan.
+- Integrasi SMODS (`src/formation/formations.lua`, semuanya wrap Lua):
+  - Setiap formasi = `SMODS.PokerHand` (`ne_*`); `order_offset` menjaga urutan prioritas di `G.handlist` untuk nilai chips×mult yang sama. `evaluate(parts, hand)` membaca hasil evaluasi untuk `hand`.
+  - `evaluate_poker_hand` dan `G.FUNCS.get_poker_hand_info` di-wrap: kartu dievaluasi sekali per panggilan, lalu `scoring_hand` diganti dengan kartu semua formasi dalam rantai (jika hand yang terpilih adalah Formasi Utama).
+  - Context `evaluate_poker_hand`: `replace_display_name` = teks rantai, kecuali joker sudah mengganti nama hand.
+  - Hasil evaluasi tangan yang dimainkan ditangkap sekali setelah `press_play` (panggilan pertama untuk `G.play.cards`), lalu dipakai fase Rantai.
+  - Fase Rantai (`initial_scoring_step`): per Formasi Sekunder, pesan nama formasi pada kartu pertamanya, lalu `SMODS.calculate_effect({chips, mult})` sebesar `ne_chain_pct`% nilai formasi itu. Setelah itu context `ne_chain` dikirim.
+- Hand vanilla: `take_ownership` → `visible = false`, `no_collection = true`, `evaluate` → `{}`.
+- Save sebelum Fase 6: `G.GAME.hands` dilengkapi dengan formasi (sebelum `start_run` memakai save), hand vanilla disembunyikan, `most_played_poker_hand` vanilla diganti `ne_spark`.
 
 ### 4.4 Tangan & Dek Bayangan
 
@@ -237,7 +246,7 @@ Satu shader untuk semua 121 joker, dengan parameter per joker:
 
 ## 7. Daftar patch Lovely
 
-Prioritas file patch New Era: `0` (diterapkan setelah SMODS yang memakai −10/−5). Hasil cek: dari anchor L1–L15 dan L19–L20, tidak ada yang diubah oleh patch SMODS saat ini (hanya L2 berbagi titik sisip). L13a–c dan L14 (Fase 5) sudah dicek cocok tepat sekali pada simulasi dump. L8 dan L18 berada di area yang diubah SMODS dan wajib dicocokkan dengan dump (simulasi dump: `lovely_sim.py` di scratchpad pengembangan, menerapkan patch SMODS dengan semantik Lovely).
+Prioritas file patch New Era: `0` (diterapkan setelah SMODS yang memakai −10/−5). Hasil cek: dari anchor L1–L15 dan L19–L20, tidak ada yang diubah oleh patch SMODS saat ini (hanya L2 berbagi titik sisip). L13a–c dan L14 (Fase 5) serta L12a–b (Fase 6) sudah dicek cocok tepat sekali pada simulasi dump. L8 dan L18 berada di area yang diubah SMODS dan wajib dicocokkan dengan dump (simulasi dump: `lovely_sim.py` di scratchpad pengembangan, menerapkan patch SMODS dengan semantik Lovely).
 
 | # | Target | Anchor | Tujuan |
 |---|---|---|---|
@@ -254,7 +263,8 @@ Prioritas file patch New Era: `0` (diterapkan setelah SMODS yang memakai −10/�
 | L9 | `game.lua` | `if G.GAME.chips - G.GAME.blind.chips >= 0 or G.GAME.current_round.hands_left < 1 then` | `NE.Encounter.cleared()` |
 | L10 | `functions/state_events.lua` | `if G.GAME.chips - G.GAME.blind.chips >= 0 then` (2 lokasi: `end_round`, `evaluate_round`) | `NE.Encounter.cleared()` |
 | L11 | `blind.lua` | `if self.boss and G.GAME.chips - G.GAME.blind.chips >= 0 then` | `NE.Encounter.cleared()` |
-| L12 | `functions/state_events.lua` | `local _handname, _played, _order = 'High Card', -1, 100` | Default `ne_spark` |
+| L12a | `functions/state_events.lua` | `local _handname, _played, _order = 'High Card', -1, 100` | Default `ne_spark` (`35_formations.toml`) |
+| L12b | `functions/state_events.lua` | `if v.played > _played or (v.played == _played and _order > v.order) then` | Hanya formasi yang dihitung sebagai most played hand |
 | L13a | `functions/state_events.lua` | `if G.play and G.play.cards[1] then return end` | `NE.Board.busy()` |
 | L13b | `card.lua` | `if not skip_check and ((G.play and #G.play.cards > 0) or` (`can_use_consumeable`) dan `if (G.play and #G.play.cards > 0) or` (`can_sell_card`) | `NE.Board.busy()` |
 | L13c | `engine/controller.lua` | `if (G.play and #G.play.cards > 0) or` (`queue_R_cursor_press`) | `NE.Board.busy()` |
@@ -266,7 +276,7 @@ Prioritas file patch New Era: `0` (diterapkan setelah SMODS yang memakai −10/�
 | L19 | `functions/button_callbacks.lua` | `G.STATE = G.STATES.SHOP` (di `cash_out`) | Kembali ke `NE_MAP` |
 | L20 | `functions/button_callbacks.lua` | `G.STATE = G.STATES.BLIND_SELECT` (di `toggle_shop`) | Kembali ke `NE_MAP` |
 
-Tanpa patch (override/wrap Lua): `number_format`, `score_number_scale`, `scale_number`, `math.*`, `check_and_set_high_score`, `inc_career_stat`, `CardArea:align_cards`, `CardArea:emplace`, `CardArea:remove_card`, `CardArea:draw`, `CardArea:parse_highlighted`, `Card:click`, `Card:highlight`, `Card:stop_drag`, `Card:collides_with_point`, `Card:get_chip_bonus`/`get_chip_mult` (efek baris), `Controller:button_press_update` (LB/B papan), `end_round` + `Game:update_selecting_hand` (kartu habis), `G.FUNCS.can_play`, `G.FUNCS.can_discard`, `G.FUNCS.discard_cards_from_highlighted`, `G.FUNCS.play_cards_from_highlighted`, `G.FUNCS.draw_from_hand_to_discard`, `G.FUNCS.draw_from_deck_to_hand`, `G.FUNCS.draw_from_discard_to_deck`, `create_UIBox_HUD` (panel mata uang), `create_UIBox_HUD_blind` (encounter), `SMODS.get_card_areas` (blind tambahan & area sementara), `SMODS.calculate_individual_effect` (key return baru).
+Tanpa patch (override/wrap Lua): `number_format`, `score_number_scale`, `scale_number`, `math.*`, `check_and_set_high_score`, `inc_career_stat`, `CardArea:align_cards`, `CardArea:emplace`, `CardArea:remove_card`, `CardArea:draw`, `CardArea:parse_highlighted`, `Card:click`, `Card:highlight`, `Card:stop_drag`, `Card:collides_with_point`, `Card:get_chip_bonus`/`get_chip_mult` (efek baris), `Controller:button_press_update` (LB/B papan), `end_round` + `Game:update_selecting_hand` (kartu habis), `G.FUNCS.can_play`, `G.FUNCS.can_discard`, `G.FUNCS.discard_cards_from_highlighted`, `G.FUNCS.play_cards_from_highlighted`, `G.FUNCS.draw_from_hand_to_discard`, `G.FUNCS.draw_from_deck_to_hand`, `G.FUNCS.draw_from_discard_to_deck`, `G.FUNCS.get_poker_hand_info`, `evaluate_poker_hand`, `create_UIBox_current_hand_row` (diagram formasi), `Game:init_game_object`/`Game:start_run` (data formasi), `create_UIBox_HUD` (panel mata uang), `create_UIBox_HUD_blind` (encounter), `SMODS.get_card_areas` (blind tambahan & area sementara), `SMODS.calculate_individual_effect` (key return baru).
 
 Area vanilla yang **tidak** disentuh: `G.FUNCS.select_blind` (NE memakai jalurnya sendiri yang meniru `select_blind`: `new_round()` + `G.GAME.blind:set_blind(...)`), `engine/string_packer.lua`, `engine/save_manager.lua`.
 
@@ -283,6 +293,7 @@ Area vanilla yang **tidak** disentuh: `G.FUNCS.select_blind` (NE memakai jalurny
 | Data | Lokasi | Mekanisme |
 |---|---|---|
 | Papan, Tangan/Dek Bayangan, Kamui, dll. | CardArea di `G.*` | `save_run` vanilla mengiterasi semua CardArea; dibuat di `custom_card_areas` sebelum load |
+| Level & jumlah main formasi | `G.GAME.hands[ne_*]` | Mekanisme SMODS; save lama dilengkapi saat load |
 | Slot kartu (`ne_slot`, `ne_residue`, `ne_since`), stiker, UID kartu | `card.ability.ne_*` | `Card:save` menyimpan `ability` utuh. Kartu yang ditempatkan sebelum Play tidak disimpan sebagai penempatan (save hanya terjadi di antara tangan) |
 | Ukuran papan | `G.play.config.ne_board` | Ikut `CardArea:save`; save lama mendapat 5×3 setelah load |
 | Peta, encounter, mata uang, aturan, statistik, graveyard, underworld | `G.GAME.newera` (data polos) | Ikut `GAME` |

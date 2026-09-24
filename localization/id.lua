@@ -9,7 +9,7 @@ return {
                     'dan 121 joker crossover dalam tiga rank:',
                     '{C:inactive}Unranked{}, {C:red}Demonic{}, dan {C:gold}Heavenly{}.',
                     ' ',
-                    '{C:inactive}Build pengembangan (Fase 5: papan).{}',
+                    '{C:inactive}Build pengembangan (Fase 6: formasi).{}',
                 },
             },
         },
@@ -85,8 +85,260 @@ return {
                 },
             },
         },
+        Planet = {
+            c_ne_empyrea = {
+                name = 'Empyrea',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Naik level',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult dan',
+                    '{C:chips}+#4#{} Chips',
+                },
+            },
+            c_ne_polaris = {
+                name = 'Polaris',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Naik level',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult dan',
+                    '{C:chips}+#4#{} Chips',
+                },
+            },
+            c_ne_andromeda = {
+                name = 'Andromeda',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Naik level',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult dan',
+                    '{C:chips}+#4#{} Chips',
+                },
+            },
+            c_ne_pegasus = {
+                name = 'Pegasus',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Naik level',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult dan',
+                    '{C:chips}+#4#{} Chips',
+                },
+            },
+            c_ne_nibiru = {
+                name = 'Nibiru',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Naik level',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult dan',
+                    '{C:chips}+#4#{} Chips',
+                },
+            },
+            c_ne_sirius = {
+                name = 'Sirius',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Naik level',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult dan',
+                    '{C:chips}+#4#{} Chips',
+                },
+            },
+            c_ne_crux = {
+                name = 'Crux',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Naik level',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult dan',
+                    '{C:chips}+#4#{} Chips',
+                },
+            },
+            c_ne_perseus = {
+                name = 'Perseus',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Naik level',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult dan',
+                    '{C:chips}+#4#{} Chips',
+                },
+            },
+            c_ne_cygnus = {
+                name = 'Cygnus',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Naik level',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult dan',
+                    '{C:chips}+#4#{} Chips',
+                },
+            },
+            c_ne_sagitta = {
+                name = 'Sagitta',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Naik level',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult dan',
+                    '{C:chips}+#4#{} Chips',
+                },
+            },
+            c_ne_draco = {
+                name = 'Draco',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Naik level',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult dan',
+                    '{C:chips}+#4#{} Chips',
+                },
+            },
+            c_ne_orion = {
+                name = 'Orion',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Naik level',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult dan',
+                    '{C:chips}+#4#{} Chips',
+                },
+            },
+            c_ne_aquila = {
+                name = 'Aquila',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Naik level',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult dan',
+                    '{C:chips}+#4#{} Chips',
+                },
+            },
+            c_ne_pollux = {
+                name = 'Pollux',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Naik level',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult dan',
+                    '{C:chips}+#4#{} Chips',
+                },
+            },
+            c_ne_lyra = {
+                name = 'Lyra',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Naik level',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult dan',
+                    '{C:chips}+#4#{} Chips',
+                },
+            },
+            c_ne_gemini = {
+                name = 'Gemini',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Naik level',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult dan',
+                    '{C:chips}+#4#{} Chips',
+                },
+            },
+            c_ne_proxima = {
+                name = 'Proxima',
+                text = {
+                    '{S:0.8}({S:0.8,V:1}lvl.#1#{S:0.8}){} Naik level',
+                    '{C:attention}#2#',
+                    '{C:mult}+#3#{} Mult dan',
+                    '{C:chips}+#4#{} Chips',
+                },
+            },
+        },
     },
     misc = {
+        poker_hands = {
+            ne_heavens_gate = 'Gerbang Surga',
+            ne_five_line = 'Garis Lima',
+            ne_royal_row = 'Barisan Agung',
+            ne_quad_square = 'Kotak Empat',
+            ne_hell_pact = 'Pakta Neraka',
+            ne_halo_line = 'Garis Halo',
+            ne_compass = 'Kompas',
+            ne_full_link = 'Tautan Penuh',
+            ne_row_flush = 'Barisan Senada',
+            ne_row_straight = 'Barisan Berurut',
+            ne_bastion = 'Benteng',
+            ne_triad = 'Triad',
+            ne_ascent = 'Tangga',
+            ne_double_link = 'Tautan Ganda',
+            ne_kin_trio = 'Trio Sekerabat',
+            ne_twin_link = 'Tautan Kembar',
+            ne_spark = 'Percikan',
+        },
+        poker_hand_descriptions = {
+            ne_heavens_gate = {
+                'Papan penuh dan tiap baris berupa',
+                'Garis Lima, Barisan Agung,',
+                'Barisan Senada, atau Barisan Berurut',
+            },
+            ne_five_line = {
+                'Satu baris penuh kartu',
+                'dengan rank sama',
+            },
+            ne_royal_row = {
+                'Satu baris penuh satu suit',
+                'dengan rank berurutan',
+                'kiri ke kanan (naik/turun)',
+            },
+            ne_quad_square = {
+                'Persegi 2x2 kartu',
+                'dengan rank sama',
+            },
+            ne_hell_pact = {
+                '3 kartu Iblis dalam satu garis',
+                '(baris, kolom, atau diagonal)',
+                'Memberi +3 Corruption',
+            },
+            ne_halo_line = {
+                '3 kartu Berkah dalam satu garis',
+                '(baris, kolom, atau diagonal)',
+                'Memberi +2 Divinity',
+            },
+            ne_compass = {
+                'Satu kartu dan 4 tetangganya',
+                '(atas, bawah, kiri, kanan)',
+                'semuanya suit sama',
+            },
+            ne_full_link = {
+                'Triad dan Tautan Kembar',
+                'yang tidak berbagi kartu',
+            },
+            ne_row_flush = {
+                'Satu baris penuh kartu',
+                'dengan suit sama',
+            },
+            ne_row_straight = {
+                'Satu baris penuh dengan rank',
+                'berurutan kiri ke kanan (naik/turun)',
+                'As boleh tinggi atau rendah',
+            },
+            ne_bastion = {
+                'Persegi 2x2 kartu',
+                'dengan suit sama',
+            },
+            ne_triad = {
+                '3 kartu rank sama dalam',
+                'satu garis (baris, kolom, atau diagonal)',
+            },
+            ne_ascent = {
+                '3 rank berurutan dalam satu garis',
+                '(baris, kolom, atau diagonal)',
+            },
+            ne_double_link = {
+                'Dua Tautan Kembar',
+                'yang tidak berbagi kartu',
+            },
+            ne_kin_trio = {
+                '3 kartu suit sama dalam',
+                'satu garis (baris, kolom, atau diagonal)',
+            },
+            ne_twin_link = {
+                '2 kartu bersebelahan',
+                '(kiri-kanan atau atas-bawah)',
+                'dengan rank sama',
+            },
+            ne_spark = {
+                'Tanpa formasi: hanya kartu',
+                'dengan rank tertinggi yang',
+                'ditempatkan tangan ini dicetak',
+            },
+        },
         labels = {
             ne_unranked = 'Unranked',
             ne_demonic = 'Demonic',
@@ -121,7 +373,7 @@ return {
             ne_cfg_debug = 'Alat debug (F9 / F10)',
             ne_cfg_test_jokers = 'Joker uji di pool',
             ne_cfg_board_small = 'Kartu papan lebih kecil',
-            ne_cfg_note = 'Planet/blind baru berlaku mulai Fase 6/10',
+            ne_cfg_note = 'Blind baru berlaku mulai Fase 10',
 
             ne_cheat_title = 'Cheat New Era',
             ne_cheat_not_in_run = 'Mulai run untuk memakai cheat',
@@ -150,6 +402,9 @@ return {
             ne_cheat_board_size = 'Papan: ukuran 5x3/6x4/4x2',
             ne_cheat_board_shuffle = 'Papan: acak Residu',
             ne_cheat_board_clear = 'Papan: kosongkan',
+            ne_cheat_hand_preset = 'Tangan: preset formasi',
+            ne_cheat_level_formations = 'Formasi: +1 level',
+            ne_cheat_give_planets = 'Beri 2 planet',
 
             ne_msg_omen = 'Pertanda!',
             ne_msg_chain = 'Rantai!',

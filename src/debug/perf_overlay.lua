@@ -97,6 +97,11 @@ local function build_lines()
                 cols, rows, #G.play.cards, #Board.residues(), Board.residue_cap(), staged,
                 #Board.marked, Board.free_slots(), Board.version)
         end
+        local F = NE.Formation
+        if F and F.stats then
+            lines[#lines + 1] = format('Formation %s   cap %d   chain +%d%%   evals %d   cache hits %d',
+                F.debug_chain(), F.cap(), F.chain_pct(), F.stats.evaluations, F.stats.cache_hits)
+        end
         if NE.Phases and NE.Phases.trace.last ~= '' then
             lines[#lines + 1] = format('Phases (last hand): %s   score %s',
                 NE.Phases.trace.last, fmt_value(NE.Phases.last_score))
