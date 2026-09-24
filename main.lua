@@ -1,0 +1,41 @@
+-- New Era entry point. Loaded by Steamodded with SMODS.current_mod set to this mod.
+-- Modules are loaded in dependency order; content (jokers, etc.) always loads last.
+
+NE = NE or {}
+NE.mod = SMODS.current_mod
+NE.config = NE.mod.config
+
+local MODULES = {
+    -- core
+    'src/core/ne.lua',
+    'src/core/log.lua',
+    'src/core/util.lua',
+    'src/core/state.lua',
+    'src/core/hooks.lua',
+    'src/core/uid.lua',
+    'src/core/rules.lua',
+    'src/core/cond.lua',
+    -- content registries
+    'src/content/atlases.lua',
+    'src/content/rarities.lua',
+    -- compatibility with vanilla content
+    'src/compat/vanilla_pool.lua',
+    -- ui
+    'src/ui/config_tab.lua',
+    -- debug tools
+    'src/debug/perf_overlay.lua',
+    'src/debug/cheats.lua',
+    'src/debug/keybinds.lua',
+    -- content
+    'src/jokers/test/test_jokers.lua',
+}
+
+for _, path in ipairs(MODULES) do
+    local chunk, err = SMODS.load_file(path)
+    if not chunk then
+        error('[NewEra] Failed to load ' .. path .. ': ' .. tostring(err))
+    end
+    chunk()
+end
+
+NE.log.info('New Era %s loaded (%d modules).', NE.VERSION, #MODULES)

@@ -1,0 +1,23 @@
+{
+  "id": "NewEra",
+  "name": "New Era",
+  "display_name": "New Era",
+  "author": ["minoru20009"],
+  "description": "Extreme expansion for Balatro: board & formations, hyper scoring, branching map and 121 crossover jokers.",
+  "prefix": "ne",
+  "main_file": "main.lua",
+  "priority": 0,
+  "badge_colour": "C9A227",
+  "badge_text_colour": "1B1B1B",
+  "version": "0.2.0~dev",
+  "icon_path": "icon.png",
+  "dependencies": [
+    "Steamodded (>=26.829.0)",
+    "Lovely (>=0.9)"
+  ],
+  "conflicts": [
+    "Talisman",
+    "Amulet",
+    "Cryptid"
+  ]
+}
