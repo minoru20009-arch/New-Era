@@ -323,7 +323,12 @@ function A.install(M)
     add_to_drawhash = function(obj) M.drawhash[#M.drawhash + 1] = obj end
     prep_draw = function() end
     pseudoseed = function(key) return 0.5 end
-    pseudoshuffle = function(list, seed) -- deterministic stand-in: reverse
+    -- like the game's version: tables are sorted by sort_id first (so a list of numbers fails
+    -- the same way: "attempt to index a number value"); the shuffle itself is a reverse
+    pseudoshuffle = function(list, seed)
+        if list[1] and list[1].sort_id then
+            table.sort(list, function(a, b) return (a.sort_id or 1) < (b.sort_id or 2) end)
+        end
         local n = #list
         for i = 1, math.floor(n / 2) do list[i], list[n - i + 1] = list[n - i + 1], list[i] end
     end

@@ -702,11 +702,12 @@ return function(T)
         eq(Board.card_at(5, 3), b, 'card_at(col, row)')
         eq(#Board.residues(), 3, 'three Residue cards')
         eq(#Board.residues(3), 1, 'one in the Front row')
-        -- Residue in slot order a(2), c(9), b(15); the mock shuffle reverses the slot list
+        -- slots in order 2, 9, 15; the mock shuffle sorts the cards by sort_id (a, b, c) and
+        -- reverses them (c, b, a)
         check(Board.shuffle_residues('x'), 'shuffle')
+        eq(c.ability.ne_slot, 2, 'shuffled (deterministic mock) c')
+        eq(b.ability.ne_slot, 9, 'shuffled (deterministic mock) b')
         eq(a.ability.ne_slot, 15, 'shuffled (deterministic mock) a')
-        eq(c.ability.ne_slot, 9, 'shuffled (deterministic mock) c')
-        eq(b.ability.ne_slot, 2, 'shuffled (deterministic mock) b')
         M.contexts = {}
         M.flush_events()
         local reasons = {}

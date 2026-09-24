@@ -574,7 +574,9 @@ function Board.shuffle_residues(seed_key)
     if #cards < 2 then return false end
     local slots = {}
     for i, card in ipairs(cards) do slots[i] = card.ability.ne_slot end
-    pseudoshuffle(slots, pseudoseed(seed_key or 'ne_board_shuffle'))
+    -- the game's pseudoshuffle only takes a list of cards (it sorts them by sort_id first),
+    -- so the cards are shuffled and then given the slots in order
+    pseudoshuffle(cards, pseudoseed(seed_key or 'ne_board_shuffle'))
     for i, card in ipairs(cards) do card.ability.ne_slot = slots[i] end
     bump()
     Board.queue_changed('shuffle')
