@@ -9,7 +9,7 @@ return {
                     'and 121 crossover jokers in three ranks:',
                     '{C:inactive}Unranked{}, {C:red}Demonic{} and {C:gold}Heavenly{}.',
                     ' ',
-                    '{C:inactive}Development build (Phase 2: framework).{}',
+                    '{C:inactive}Development build (Phase 3: big numbers).{}',
                 },
             },
         },
@@ -33,6 +33,15 @@ return {
                 text = {
                     '{C:chips}+#1#{} Chips',
                     '{X:mult,C:white} X#2# {} Mult',
+                    '{C:inactive}(New Era debug joker){}',
+                },
+            },
+            j_ne_test_overflow = {
+                name = 'Test: Overflow',
+                text = {
+                    '{X:chips,C:white} X#1# {} Chips',
+                    '{X:mult,C:white} X#2# {} Mult',
+                    'Score passes {C:attention}1e308{}',
                     '{C:inactive}(New Era debug joker){}',
                 },
             },
@@ -73,6 +82,12 @@ return {
             ne_cheat_give_demonic = 'Give Test: Demonic',
             ne_cheat_give_heavenly = 'Give Test: Heavenly',
             ne_cheat_no_room = 'No joker slot free',
+            ne_cheat_score_1e500 = 'Score = 1e500',
+            ne_cheat_score_mul = 'Score x1e150',
+            ne_cheat_target_ee10 = 'Target = ee10',
+            ne_cheat_target_tet5 = 'Target = 10^^5',
+            ne_cheat_hand_display = 'Hand: big chips/mult',
+            ne_cheat_give_overflow = 'Give Test: Overflow',
         },
     },
 }

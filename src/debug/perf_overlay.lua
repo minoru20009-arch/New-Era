@@ -38,6 +38,26 @@ local function card_count(area)
     return (area and area.cards) and #area.cards or 0
 end
 
+-- NE.Big values created per second (0 while idle means no per-frame allocation).
+local big_rate = { last_allocs = 0, last_time = nil, per_sec = 0 }
+
+local function update_big_rate()
+    local stats = NE.Big and NE.Big.stats
+    if not stats then return end
+    local now = getTime()
+    if big_rate.last_time then
+        local dt = now - big_rate.last_time
+        if dt > 0 then big_rate.per_sec = (stats.allocs - big_rate.last_allocs) / dt end
+    end
+    big_rate.last_time = now
+    big_rate.last_allocs = stats.allocs
+end
+
+local function fmt_value(v)
+    if v == nil then return '-' end
+    return tostring(number_format(v))
+end
+
 local function build_lines()
     local lines = {
         format('New Era %s   [F9 hide | F10 cheats]', NE.VERSION),
@@ -58,6 +78,14 @@ local function build_lines()
             lines[#lines + 1] = format('NE next uid %d   rules hand/round/ante %d/%d/%d',
                 s.next_uid, NE.Rules.count('hand'), NE.Rules.count('round'), NE.Rules.count('ante'))
         end
+        lines[#lines + 1] = format('Score %s / target %s',
+            fmt_value(G.GAME.chips), fmt_value(G.GAME.blind and G.GAME.blind.chips))
+    end
+    if NE.Big and NE.Big.stats then
+        update_big_rate()
+        lines[#lines + 1] = format('Big %.0f/s   total %d   flagged %d   save %s',
+            big_rate.per_sec, NE.Big.stats.allocs, NE.Big.stats.flagged,
+            tostring(NE.Big.hooks and NE.Big.hooks.cull))
     end
     return lines
 end

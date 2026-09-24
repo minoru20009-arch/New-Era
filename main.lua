@@ -15,6 +15,12 @@ local MODULES = {
     'src/core/uid.lua',
     'src/core/rules.lua',
     'src/core/cond.lua',
+    -- big numbers
+    'src/bignum/big.lua',
+    'src/bignum/ops_hyper.lua',
+    'src/bignum/notation.lua',
+    'src/bignum/serialize.lua',
+    'src/bignum/hooks.lua',
     -- content registries
     'src/content/atlases.lua',
     'src/content/rarities.lua',

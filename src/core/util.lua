@@ -3,11 +3,11 @@
 NE.util = NE.util or {}
 local util = NE.util
 
--- True for values that behave like numbers in New Era.
--- Phase 3 extends this to accept NE.Big values.
+-- True for values that behave like numbers in New Era: Lua numbers and NE.Big values.
 function util.is_numeric(x)
-    return type(x) == 'number'
+    return type(x) == 'number' or (NE.Big ~= nil and NE.Big.is ~= nil and NE.Big.is(x))
 end
+NE.is_numeric = util.is_numeric
 
 function util.clamp(x, lo, hi)
     if x < lo then return lo end

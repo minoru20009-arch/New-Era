@@ -9,7 +9,7 @@ return {
                     'dan 121 joker crossover dalam tiga rank:',
                     '{C:inactive}Unranked{}, {C:red}Demonic{}, dan {C:gold}Heavenly{}.',
                     ' ',
-                    '{C:inactive}Build pengembangan (Fase 2: kerangka).{}',
+                    '{C:inactive}Build pengembangan (Fase 3: angka besar).{}',
                 },
             },
         },
@@ -33,6 +33,15 @@ return {
                 text = {
                     '{C:chips}+#1#{} Chips',
                     '{X:mult,C:white} X#2# {} Mult',
+                    '{C:inactive}(Joker debug New Era){}',
+                },
+            },
+            j_ne_test_overflow = {
+                name = 'Uji: Overflow',
+                text = {
+                    '{X:chips,C:white} X#1# {} Chips',
+                    '{X:mult,C:white} X#2# {} Mult',
+                    'Skor melewati {C:attention}1e308{}',
                     '{C:inactive}(Joker debug New Era){}',
                 },
             },
@@ -73,6 +82,12 @@ return {
             ne_cheat_give_demonic = 'Beri Uji: Demonic',
             ne_cheat_give_heavenly = 'Beri Uji: Heavenly',
             ne_cheat_no_room = 'Slot joker penuh',
+            ne_cheat_score_1e500 = 'Skor = 1e500',
+            ne_cheat_score_mul = 'Skor x1e150',
+            ne_cheat_target_ee10 = 'Target = ee10',
+            ne_cheat_target_tet5 = 'Target = 10^^5',
+            ne_cheat_hand_display = 'Tangan: chips/mult besar',
+            ne_cheat_give_overflow = 'Beri Uji: Overflow',
         },
     },
 }

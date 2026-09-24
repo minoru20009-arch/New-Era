@@ -93,9 +93,10 @@ typedef struct { double a[8]; int32_t len; int8_t sign; uint8_t flags; } ne_big;
 ]]
 ```
 
-- Semantik **array OmegaNum** (port dari OmegaNum.js): `a[0]` = nilai dasar, `a[k]` = jumlah operasi panah ke-k dengan basis 10. Kapasitas 8 → mencakup hingga operator `{7}` (heptasi). Di luar kapasitas → saturasi ke `NE.Big.MAX`.
+- Semantik **array OmegaNum** (OmegaNum.js): `a[0]` = nilai dasar, `a[k]` = jumlah operasi panah ke-k dengan basis 10. Kapasitas 8 → mencakup hingga operator `{7}` (heptasi). Di luar kapasitas → saturasi ke `NE.Big.MAX`. Implementasi New Era ditulis sendiri (bentuk normal & perbandingan leksikografis, lihat header `src/bignum/big.lua`).
 - **Array disimpan inline di cdata** (tanpa tabel samping seperti Amulet) → satu alokasi per nilai, tidak ada tabel weak.
-- **Jalur cepat:** jika `len == 1` (nilai < 1.8e308), operasi memakai double langsung; naik ke representasi panjang hanya saat overflow.
+- **Jalur cepat:** jika `len == 1` (nilai < 1e308), operasi memakai double langsung; naik ke representasi panjang hanya saat overflow.
+- **Terverifikasi di Fase 3:** LuaJIT memanggil `__eq` untuk cdata vs number/nil/string; field yang tidak ada pada struct hanya aman jika `__index` berupa **fungsi** (tabel → error), jadi `NE.Big` memakai fungsi.
 - `flags`: bit NaN/Inf **hanya untuk diagnosis**; semua API publik mengembalikan nilai tersaturasi, tidak pernah NaN/Inf.
 
 ### 3.2 Operasi
@@ -113,8 +114,9 @@ typedef struct { double a[8]; int32_t len; int8_t sign; uint8_t flags; } ne_big;
 | `number_format`, `score_number_scale`, `scale_number` | wrap Lua | Big → notasi New Era; number → fungsi asli |
 | `math.floor/ceil/abs/max/min/log/log10/sqrt/exp` | wrap Lua | Mengembalikan big hanya jika input big; `max/min` tidak mengubah tipe number murni |
 | `check_and_set_high_score`, `inc_career_stat` | wrap Lua | Di-clamp ke Lua number → profil tetap kompatibel vanilla |
-| Cek `type(x) == 'number'` | patch per lokasi | 13 lokasi di vanilla; yang relevan: `UI_definitions.lua:230`, `misc_functions.lua:739,958,969,1018`, `button_callbacks.lua:1907,1923,1933`, `common_events.lua:503,525` → ganti ke `NE.is_numeric(x)` |
-| `modulate_sound` (per frame) | patch | Pakai `log10` yang di-cache saat skor berubah, bukan operasi big per frame |
+| Cek `type(x) == 'number'` | patch per lokasi (L8) | Hasil audit Fase 3: `misc_functions.lua:958,969,1018` dan `button_callbacks.lua:1907` ditangani wrap Lua; `misc_functions.lua:739` dan `common_events.lua:503,525` sudah digantikan SMODS → patch L8a/L8b menarget payload SMODS; juice teks → L8c di `src/ui.lua` SMODS. `UI_definitions.lua:230` (leaderboard HTTP) dan `button_callbacks.lua:1923,1933` (UI vanilla yang digantikan SMODS) tidak relevan |
+| `modulate_sound` (per frame) | patch (L7) | `NE.Big.sound_intensity` mengubah skor/target Big menjadi number dengan rasio & urutan sama (tanpa alokasi) |
+| Skor tangan `chips × mult` | wrap `SMODS.Scoring_Calculations.multiply.func` | Produk > 1e308 menjadi Big (Fase 3); chips/mult sendiri menjadi Big di Fase 4 |
 | Event `ease` pada `G.GAME.chips` | tanpa patch | Interpolasi `percent*start + (1−percent)*end` bekerja lewat metamethod; `math.floor` sudah di-wrap. Untuk nilai `len > 1`, NE mengganti event ini dengan ease di ruang log (lebih murah dan halus) |
 | Perbandingan menang/kalah | patch (§7) | Diganti `NE.Encounter.cleared()` |
 | `G.GAME.hands[*].chips/mult/s_*/l_*` | setelah `init_game_object` | Dikonversi ke big (pola Amulet `igo`) |
@@ -136,7 +138,8 @@ Hanya ASCII (font pixel Balatro tidak dijamin punya `↑`). Hasil format di-cach
 
 - `NE.Big.pack(x)` → string `"neb:<sign>:<len>:<a0>,<a1>,…"` dengan `%.17g` (presisi penuh double).
 - Save: patch `recursive_table_cull` (`misc_functions.lua`, anchor `else ret_t[k] = v end`) → jika `type(v) == 'cdata'`, simpan `NE.Big.pack(v)`. Semua jalur save (`cardAreas`, `GAME`, `BLIND`, `tags`) melewati fungsi ini, jadi `STR_PACK` dan thread save hanya menerima data polos.
-- Load: setelah `saveTable` dibaca di `Game:start_run`, satu kali traversal mengubah string `neb:` kembali menjadi big (juga untuk `Card:load` → `ability`).
+- Load (implementasi Fase 3, menggantikan L4): wrap Lua pada `STR_UNPACK` memulihkan string `neb:` di setiap tabel yang dibaca (save run, pratinjau "Continue", profil), dan wrap `Game:start_run` melakukan hal yang sama untuk `savetext` yang tidak lewat `STR_UNPACK` (checkpoint Fase 8). `Card:load` menerima `ability` yang sudah dipulihkan.
+- Jika patch L6 tidak menempel, `NE.Big.ensure_cull()` memasang `recursive_table_cull` versi Lua yang setara (terdeteksi saat start, dicatat di log).
 - Profil: tidak pernah menyimpan big (di-clamp).
 
 ## 4. Papan, formasi, dan dua tangan
@@ -230,11 +233,13 @@ Prioritas file patch New Era: `0` (diterapkan setelah SMODS yang memakai −10/�
 | L1 | `globals.lua` | regex `self\.STATES = \{` | Tambah `NE_MAP = 1000`, `NE_EVENT = 1001` |
 | L2 | `game.lua` | `if self.STATE == self.STATES.TAROT_PACK then` (before) | Dispatch `NE.Map.update(dt)` / `NE.Event.update(dt)`. SMODS (`booster.toml`) juga menyisipkan sebelum baris ini; barisnya tetap ada, jadi kedua sisipan aman. |
 | L3 | `game.lua` | `self:prep_stage(G.STAGES.RUN, saveTable and saveTable.STATE or G.STATES.BLIND_SELECT)` | Run baru dimulai di `NE_MAP` |
-| L4 | `game.lua` | `self.GAME.modifiers = self.GAME.modifiers or {}` (after) | Rehydrate big number + init `G.GAME.newera` |
+| ~~L4~~ | `game.lua` | — | **Tidak dipakai.** Init `G.GAME.newera` lewat wrap `init_game_object`/`start_run` (Fase 2), rehydrate big lewat wrap `STR_UNPACK`/`start_run` (Fase 3) |
 | L5 | `game.lua` | `shader = 'background',` | Ganti ke `ne_background` + extern tambahan |
 | L6 | `functions/misc_functions.lua` | `else ret_t[k] = v end` (di `recursive_table_cull`) | Pack cdata → string `neb:` |
 | L7 | `functions/misc_functions.lua` | `G.ARGS.score_intensity.required_score = G.GAME.blind and G.GAME.blind.chips or 0` | `modulate_sound` memakai log10 ter-cache |
-| L8 | `functions/misc_functions.lua`, `button_callbacks.lua`, `common_events.lua`, `UI_definitions.lua` | 9 baris cek `type(...) == 'number'` (§3.3) **(dump untuk yang dipatch SMODS)** | `NE.is_numeric` |
+| L8a | `functions/misc_functions.lua` | payload SMODS `if type(G.GAME.current_round.current_hand[name]) ~= 'number' then all_numbers = false end` | `NE.is_numeric` (suara) |
+| L8b | `functions/common_events.lua` | payload SMODS `local delta = (type(vals[name]) == 'number' and …` | `NE.is_numeric` (delta "+X") |
+| L8c | `=[SMODS _ "src/ui.lua"]` | baris juice di `G.FUNCS.hand_type_UI_set` | `NE.is_numeric` (juice teks) |
 | L9 | `game.lua` | `if G.GAME.chips - G.GAME.blind.chips >= 0 or G.GAME.current_round.hands_left < 1 then` | `NE.Encounter.cleared()` |
 | L10 | `functions/state_events.lua` | `if G.GAME.chips - G.GAME.blind.chips >= 0 then` (2 lokasi: `end_round`, `evaluate_round`) | `NE.Encounter.cleared()` |
 | L11 | `blind.lua` | `if self.boss and G.GAME.chips - G.GAME.blind.chips >= 0 then` | `NE.Encounter.cleared()` |

@@ -38,12 +38,12 @@ local function dispatch(ctx) return NE.mod.calculate(NE.mod, ctx) end
 -- ------------------------------------------------------------------------------------------
 test('load', function()
     check(NE ~= nil, 'NE namespace exists')
-    eq(NE.VERSION, '0.2.0~dev', 'version comes from mod metadata')
+    eq(NE.VERSION, M.version, 'version comes from mod metadata')
     eq(type(NE.mod.calculate), 'function', 'mod.calculate installed')
     eq(type(NE.mod.config_tab), 'function', 'config_tab installed')
     local info = false
     for _, l in ipairs(M.logs) do
-        if l.level == 'info' and l.msg:find('New Era 0.2.0~dev loaded') then info = true end
+        if l.level == 'info' and l.msg:find('New Era ' .. M.version .. ' loaded', 1, true) then info = true end
         check(l.level ~= 'error', 'no error logged during load: ' .. tostring(l.msg))
     end
     check(info, 'load message logged')
@@ -234,7 +234,7 @@ test('cond', function()
 end)
 
 test('test jokers', function()
-    eq(#SMODS.Joker.list, 3, 'three test jokers')
+    eq(#SMODS.Joker.list, 4, 'four test jokers')
     for _, j in ipairs(SMODS.Joker.list) do
         check(j.rarity:match('^ne_'), j.key .. ' uses a New Era rarity')
         eq(j.atlas, 'frames', j.key .. ' uses the frames atlas')
@@ -249,6 +249,9 @@ test('test jokers', function()
     eq(SMODS.Joker.list[1]:in_pool(), false, 'hidden when test jokers are off')
     NE.config.debug.test_jokers = true
     eq(SMODS.Joker.list[1]:in_pool(), true, 'shown when test jokers are on')
+    for _, j in ipairs(SMODS.Joker.list) do
+        if j.key == 'test_overflow' then eq(j:in_pool(), false, 'overflow joker never in pools') end
+    end
 end)
 
 test('debug tools', function()
@@ -260,7 +263,7 @@ test('debug tools', function()
     keys.f9:action()
     eq(NE.Debug.overlay.visible, true, 'F9 shows overlay')
     love.update(0.3)
-    check(NE.Debug.overlay.text:find('New Era 0.2.0~dev'), 'overlay text refreshed')
+    check(NE.Debug.overlay.text:find('New Era ' .. M.version, 1, true), 'overlay text refreshed')
     check(NE.Debug.overlay.text:find('Ante'), 'overlay shows run info')
     love.draw()
     check(M.update_calls >= 1 and M.draw_calls >= 1, 'original love.update/draw still called')
@@ -329,6 +332,10 @@ test('localization', function()
         check(en.descriptions.Joker['j_ne_' .. j.key], 'joker text for ' .. j.key)
     end
 end)
+
+-- Phase 3: NE.Big
+local big_spec = assert(loadfile(M.root .. '/tests/big_spec.lua'))()
+big_spec({ test = test, check = check, eq = eq, M = M })
 
 print(('\n%d passed, %d failed'):format(passed, failed))
 os.exit(failed == 0 and 0 or 1)

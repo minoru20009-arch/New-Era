@@ -20,6 +20,12 @@ local function give_joker(key)
     SMODS.add_card({ set = 'Joker', key = key })
 end
 
+local function set_target(value)
+    local blind = G.GAME.blind
+    blind.chips = NE.Big.new(value)
+    blind.chip_text = number_format(blind.chips)
+end
+
 Debug.CHEATS = {
     { id = 'money', label = 'ne_cheat_money', run = function() ease_dollars(50) end },
     { id = 'hand', label = 'ne_cheat_hand', run = function() ease_hands_played(1) end },
@@ -34,6 +40,31 @@ Debug.CHEATS = {
     { id = 'give_unranked', label = 'ne_cheat_give_unranked', run = function() give_joker('j_ne_test_unranked') end },
     { id = 'give_demonic', label = 'ne_cheat_give_demonic', run = function() give_joker('j_ne_test_demonic') end },
     { id = 'give_heavenly', label = 'ne_cheat_give_heavenly', run = function() give_joker('j_ne_test_heavenly') end },
+    -- Phase 3: big numbers
+    {
+        id = 'score_1e500',
+        label = 'ne_cheat_score_1e500',
+        available = in_blind,
+        run = function() G.GAME.chips = NE.Big.new('1e500') end,
+    },
+    {
+        id = 'score_mul',
+        label = 'ne_cheat_score_mul',
+        available = in_blind,
+        run = function() G.GAME.chips = NE.Big.mul(math.max(G.GAME.chips, 1), 1e150) end,
+    },
+    { id = 'target_ee10', label = 'ne_cheat_target_ee10', available = in_blind, run = function() set_target('ee10') end },
+    { id = 'target_tet5', label = 'ne_cheat_target_tet5', available = in_blind, run = function() set_target('10^^5') end },
+    {
+        id = 'hand_display',
+        label = 'ne_cheat_hand_display',
+        available = in_blind,
+        run = function()
+            update_hand_text({ immediate = true, nopulse = true, delay = 0 },
+                { chips = NE.Big.new('1e400'), mult = NE.Big.new('ee12') })
+        end,
+    },
+    { id = 'give_overflow', label = 'ne_cheat_give_overflow', run = function() give_joker('j_ne_test_overflow') end },
 }
 
 for _, cheat in ipairs(Debug.CHEATS) do

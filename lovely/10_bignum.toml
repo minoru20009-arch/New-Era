@@ -1,0 +1,65 @@
+# New Era - NE.Big integration points that cannot be done with a Lua wrap.
+# Priority 0: applied after Steamodded (-10/-5), so patterns may match Steamodded's payloads.
+# Every payload is nil-safe: if New Era failed to load, the original behaviour remains.
+
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# L6 - recursive_table_cull feeds STR_PACK and the save thread, which only accept plain data.
+# Pack Big values (cdata) into "neb:" strings. src/bignum/hooks.lua checks at start-up that
+# this applied and installs a Lua fallback if it did not.
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = "else ret_t[k] = v end"
+position = "at"
+payload = '''
+elseif type(v) == 'cdata' and NE and NE.Big then ret_t[k] = NE.Big.pack_value(v)
+else ret_t[k] = v end'''
+match_indent = true
+times = 1
+
+# L7 - modulate_sound runs every frame. Turn Big earned/required scores into plain numbers
+# (same ratio and ordering) so the ambient sound and flame code does not allocate.
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = "G.ARGS.score_intensity.required_score = G.GAME.blind and G.GAME.blind.chips or 0"
+position = "after"
+payload = "if NE and NE.Big then NE.Big.sound_intensity(G.ARGS.score_intensity) end"
+match_indent = true
+times = 1
+
+# L8a - Steamodded's modulate_sound check (scoring_calculation.toml) treats Big hand values
+# as non-numbers and silences the score sound.
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = "if type(G.GAME.current_round.current_hand[name]) ~= 'number' then all_numbers = false end"
+position = "at"
+payload = "if not (type(G.GAME.current_round.current_hand[name]) == 'number' or (NE and NE.is_numeric and NE.is_numeric(G.GAME.current_round.current_hand[name]))) then all_numbers = false end"
+match_indent = true
+times = 1
+
+# L8b - Steamodded's update_hand_text (scoring_calculation.toml) shows no "+X" delta for Big
+# hand values.
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "local delta = (type(vals[name]) == 'number' and type(G.GAME.current_round.current_hand[name]) == 'number') and (vals[name] - G.GAME.current_round.current_hand[name]) or 0"
+position = "at"
+payload = "local delta = (NE and NE.is_numeric and NE.is_numeric(vals[name]) and NE.is_numeric(G.GAME.current_round.current_hand[name]) or (type(vals[name]) == 'number' and type(G.GAME.current_round.current_hand[name]) == 'number')) and (vals[name] - G.GAME.current_round.current_hand[name]) or 0"
+match_indent = true
+times = 1
+
+# L8c - Steamodded's hand value UI (src/ui.lua, hand_type_UI_set) gives Big values no text juice.
+[[patches]]
+[patches.pattern]
+target = '=[SMODS _ "src/ui.lua"]'
+pattern = "if not G.TAROT_INTERRUPT_PULSE then G.FUNCS.text_super_juice(e, math.max(0,math.floor(math.log10(type(G.GAME.current_round.current_hand[e.config.type]) == 'number' and math.abs(G.GAME.current_round.current_hand[e.config.type]) or 1)))) end"
+position = "at"
+payload = "if not G.TAROT_INTERRUPT_PULSE then G.FUNCS.text_super_juice(e, math.max(0,math.floor(math.log10((type(G.GAME.current_round.current_hand[e.config.type]) == 'number' or (NE and NE.is_numeric and NE.is_numeric(G.GAME.current_round.current_hand[e.config.type]))) and math.abs(G.GAME.current_round.current_hand[e.config.type]) or 1)))) end"
+match_indent = true
+times = 1
