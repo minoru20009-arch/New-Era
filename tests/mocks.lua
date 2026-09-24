@@ -244,13 +244,25 @@ function M.install()
     end
 
     -- Number helpers with the behaviour of the game's versions (as patched by Steamodded).
+    -- number_format follows the same steps, including the "%.4g" round trip that breaks for
+    -- values near the largest double.
+    round_number = function(num, precision)
+        precision = 10 ^ (precision or 0)
+        return math.floor(num * precision + 0.4999999999999994) / precision
+    end
     number_format = function(num, e_switch_point)
         if type(num) ~= 'number' then return num end
         local sign = num < 0 and '-' or ''
         num = math.abs(num)
         if num >= (e_switch_point or 1e11) then
-            local fac = math.floor(math.log10(num))
-            local mant = num / 10 ^ fac
+            local x = string.format('%.4g', num)
+            local fac = math.floor(math.log(tonumber(x), 10))
+            if num == math.huge then return sign .. 'naneinf' end
+            local mant = round_number(x / (10 ^ fac), 3)
+            if mant >= 10 then
+                mant = mant / 10
+                fac = fac + 1
+            end
             return sign .. string.format(fac >= 100 and '%.1fe%i' or fac >= 10 and '%.2fe%i' or '%.3fe%i', mant, fac)
         end
         local s = string.format('%.0f', num):reverse():gsub('(%d%d%d)', '%1,'):gsub(',$', ''):reverse()

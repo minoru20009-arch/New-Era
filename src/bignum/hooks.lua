@@ -37,6 +37,9 @@ end
 
 -- Number formatting ------------------------------------------------------------------------------
 
+-- The game's formatter breaks for finite numbers from ~1.7975e308 up: "%.4g" rounds them to
+-- "1.798e+308", which parses back as inf and prints "nane-9223372036854775808". Numbers from
+-- 1e308 up (profile high scores are clamped to the largest double) use Big notation instead.
 wrap_global('number_format', function(ref)
     Big.scalar_format = function(v) return ref(v) end
     Big.clear_format_cache()
@@ -44,6 +47,9 @@ wrap_global('number_format', function(ref)
         if is_big(num) then
             if num.len == 1 then return ref(num.sign * num.a[0], e_switch_point) end
             return Big.format(num)
+        end
+        if type(num) == 'number' and (num >= T or num <= -T) and num == num and num ~= huge and num ~= -huge then
+            return Big.format(Big.new(num))
         end
         return ref(num, e_switch_point)
     end

@@ -67,6 +67,12 @@
 
 Tolong kirimkan hasil tiap langkah (dan isi `Mods/lovely/log` jika ada error).
 
+## Perbaikan setelah uji di game
+
+- **Stats menampilkan "nan…" untuk Best hand**
+  - Penyebab: formatter vanilla/SMODS rusak untuk angka ≥ ±1,7975e308. `"%.4g"` membulatkan ke `1.798e+308`, yang saat di-parse ulang menjadi `inf`, sehingga tercetak `nane-9223372036854775808`. High score profil yang dijepit ke double terbesar jatuh di rentang itu.
+  - Perbaikan: wrapper `number_format` memformat angka ≥ 1e308 dengan notasi Big (`1.80e308`). Profil yang sudah tersimpan langsung tampil benar, tanpa perlu diubah.
+
 ## Known issues
 
 - **Chips/mult sendiri masih number.** Satu nilai chips atau mult di atas 1e308 tetap menjadi `inf` sebelum dikalikan (dijepit ke 1.798e308 saat dikalikan). Konversi chips/mult ke Big masuk Fase 4 (operator skor). Joker uji sengaja menjaga keduanya di bawah 1e308.
