@@ -234,13 +234,15 @@ test('cond', function()
 end)
 
 test('test jokers', function()
-    eq(#SMODS.Joker.list, 4, 'four test jokers')
+    eq(#SMODS.Joker.list, 9, 'nine test jokers')
+    -- jokers that act in a scoring phase instead of joker_main
+    local trigger = { test_aura = { ne_ascension = true }, test_phases = { ne_judgment = true } }
     for _, j in ipairs(SMODS.Joker.list) do
         check(j.rarity:match('^ne_'), j.key .. ' uses a New Era rarity')
         eq(j.atlas, 'frames', j.key .. ' uses the frames atlas')
         local card = { ability = { extra = j.config.extra } }
-        local ret = j:calculate(card, { joker_main = true })
-        check(type(ret) == 'table' and next(ret), j.key .. ' returns an effect in joker_main')
+        local ret = j:calculate(card, trigger[j.key] or { joker_main = true })
+        check(type(ret) == 'table' and next(ret), j.key .. ' returns an effect when triggered')
         eq(j:calculate(card, { before = true }), nil, j.key .. ' ignores other contexts')
         local vars = j:loc_vars({}, card).vars
         check(#vars >= 1, j.key .. ' has loc vars')
@@ -336,6 +338,10 @@ end)
 -- Phase 3: NE.Big
 local big_spec = assert(loadfile(M.root .. '/tests/big_spec.lua'))()
 big_spec({ test = test, check = check, eq = eq, M = M })
+
+-- Phase 4: scoring operators, Aura, phases, currencies
+local scoring_spec = assert(loadfile(M.root .. '/tests/scoring_spec.lua'))()
+scoring_spec({ test = test, check = check, eq = eq, M = M })
 
 print(('\n%d passed, %d failed'):format(passed, failed))
 os.exit(failed == 0 and 0 or 1)

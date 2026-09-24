@@ -61,15 +61,15 @@ end
 -- Scope lifetimes. `after` is the last context of a played hand.
 NE.Hooks.on_context('after', 'rules_hand', function()
     Rules.clear_scope('hand')
-end)
+end, NE.Hooks.ORDER_CLEANUP)
 
 NE.Hooks.on_context('end_of_round', 'rules_round', function(context)
     -- end_of_round is also sent per playing card (individual/repetition); react once.
     if context.individual or context.repetition then return end
     Rules.clear_scope('hand')
     Rules.clear_scope('round')
-end)
+end, NE.Hooks.ORDER_CLEANUP)
 
 NE.Hooks.on_context('ante_change', 'rules_ante', function()
     Rules.clear_scope('ante')
-end)
+end, NE.Hooks.ORDER_CLEANUP)

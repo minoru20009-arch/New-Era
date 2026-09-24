@@ -9,7 +9,7 @@ return {
                     'dan 121 joker crossover dalam tiga rank:',
                     '{C:inactive}Unranked{}, {C:red}Demonic{}, dan {C:gold}Heavenly{}.',
                     ' ',
-                    '{C:inactive}Build pengembangan (Fase 3: angka besar).{}',
+                    '{C:inactive}Build pengembangan (Fase 4: skor & fase).{}',
                 },
             },
         },
@@ -45,6 +45,45 @@ return {
                     '{C:inactive}(Joker debug New Era){}',
                 },
             },
+            j_ne_test_emult = {
+                name = 'Uji: ^Mult',
+                text = {
+                    '{X:dark_edition,C:white} ^#1# {} Mult',
+                    '{C:inactive}(Joker debug New Era){}',
+                },
+            },
+            j_ne_test_eemult = {
+                name = 'Uji: ^^Mult',
+                text = {
+                    '{X:dark_edition,C:white} ^^#1# {} Mult',
+                    '{C:inactive}(Joker debug New Era){}',
+                },
+            },
+            j_ne_test_hypermult = {
+                name = 'Uji: Hyper Mult',
+                text = {
+                    '{X:dark_edition,C:white} #1##2# {} Mult',
+                    '{C:inactive}(Joker debug New Era){}',
+                },
+            },
+            j_ne_test_aura = {
+                name = 'Uji: Aura',
+                text = {
+                    'Fase {C:attention}Kenaikan{}:',
+                    '{C:gold}+#1#{} Aura',
+                    '{C:inactive}Skor = (Chips x Mult) ^ Aura{}',
+                    '{C:inactive}(Joker debug New Era){}',
+                },
+            },
+            j_ne_test_phases = {
+                name = 'Uji: Fase',
+                text = {
+                    'Menampilkan pesan di fase',
+                    '{C:attention}Pertanda{}, {C:attention}Rantai{}, dan {C:attention}Kenaikan{}',
+                    '{C:attention}Penghakiman{}: {C:money}+#1#{} Divinity',
+                    '{C:inactive}(Joker debug New Era){}',
+                },
+            },
         },
     },
     misc = {
@@ -55,6 +94,18 @@ return {
             k_ne_unranked = 'Unranked',
             k_ne_demonic = 'Demonic',
             k_ne_heavenly = 'Heavenly',
+        },
+        v_dictionary = {
+            ne_a_echips = '^#1# Chips',
+            ne_a_emult = '^#1# Mult',
+            ne_a_eemult = '^^#1# Mult',
+            ne_a_hypermult = '#1##2# Mult',
+            ne_a_aura = '+#1# Aura',
+            ne_a_aura_minus = '-#1# Aura',
+            ne_a_xaura = 'X#1# Aura',
+            ne_a_divinity = '#1# Divinity',
+            ne_a_corruption = '#1# Corruption',
+            ne_a_time = '#1# Time',
         },
         dictionary = {
             k_ne_unranked = 'Unranked',
@@ -88,6 +139,16 @@ return {
             ne_cheat_target_tet5 = 'Target = 10^^5',
             ne_cheat_hand_display = 'Tangan: chips/mult besar',
             ne_cheat_give_overflow = 'Beri Uji: Overflow',
+            ne_cheat_give_emult = 'Beri Uji: ^Mult',
+            ne_cheat_give_eemult = 'Beri Uji: ^^Mult',
+            ne_cheat_give_hypermult = 'Beri Uji: Hyper',
+            ne_cheat_give_aura = 'Beri Uji: Aura',
+            ne_cheat_give_phases = 'Beri Uji: Fase',
+            ne_cheat_currency = '+5 tiap mata uang',
+
+            ne_msg_omen = 'Pertanda!',
+            ne_msg_chain = 'Rantai!',
+            ne_msg_ascension = 'Kenaikan!',
         },
     },
 }

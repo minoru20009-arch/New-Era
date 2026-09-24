@@ -9,7 +9,7 @@ return {
                     'and 121 crossover jokers in three ranks:',
                     '{C:inactive}Unranked{}, {C:red}Demonic{} and {C:gold}Heavenly{}.',
                     ' ',
-                    '{C:inactive}Development build (Phase 3: big numbers).{}',
+                    '{C:inactive}Development build (Phase 4: scoring & phases).{}',
                 },
             },
         },
@@ -45,6 +45,45 @@ return {
                     '{C:inactive}(New Era debug joker){}',
                 },
             },
+            j_ne_test_emult = {
+                name = 'Test: ^Mult',
+                text = {
+                    '{X:dark_edition,C:white} ^#1# {} Mult',
+                    '{C:inactive}(New Era debug joker){}',
+                },
+            },
+            j_ne_test_eemult = {
+                name = 'Test: ^^Mult',
+                text = {
+                    '{X:dark_edition,C:white} ^^#1# {} Mult',
+                    '{C:inactive}(New Era debug joker){}',
+                },
+            },
+            j_ne_test_hypermult = {
+                name = 'Test: Hyper Mult',
+                text = {
+                    '{X:dark_edition,C:white} #1##2# {} Mult',
+                    '{C:inactive}(New Era debug joker){}',
+                },
+            },
+            j_ne_test_aura = {
+                name = 'Test: Aura',
+                text = {
+                    '{C:attention}Ascension{} phase:',
+                    '{C:gold}+#1#{} Aura',
+                    '{C:inactive}Score = (Chips x Mult) ^ Aura{}',
+                    '{C:inactive}(New Era debug joker){}',
+                },
+            },
+            j_ne_test_phases = {
+                name = 'Test: Phases',
+                text = {
+                    'Shows a message in the',
+                    '{C:attention}Omen{}, {C:attention}Chain{} and {C:attention}Ascension{} phases',
+                    '{C:attention}Judgment{}: {C:money}+#1#{} Divinity',
+                    '{C:inactive}(New Era debug joker){}',
+                },
+            },
         },
     },
     misc = {
@@ -55,6 +94,18 @@ return {
             k_ne_unranked = 'Unranked',
             k_ne_demonic = 'Demonic',
             k_ne_heavenly = 'Heavenly',
+        },
+        v_dictionary = {
+            ne_a_echips = '^#1# Chips',
+            ne_a_emult = '^#1# Mult',
+            ne_a_eemult = '^^#1# Mult',
+            ne_a_hypermult = '#1##2# Mult',
+            ne_a_aura = '+#1# Aura',
+            ne_a_aura_minus = '-#1# Aura',
+            ne_a_xaura = 'X#1# Aura',
+            ne_a_divinity = '#1# Divinity',
+            ne_a_corruption = '#1# Corruption',
+            ne_a_time = '#1# Time',
         },
         dictionary = {
             k_ne_unranked = 'Unranked',
@@ -88,6 +139,16 @@ return {
             ne_cheat_target_tet5 = 'Target = 10^^5',
             ne_cheat_hand_display = 'Hand: big chips/mult',
             ne_cheat_give_overflow = 'Give Test: Overflow',
+            ne_cheat_give_emult = 'Give Test: ^Mult',
+            ne_cheat_give_eemult = 'Give Test: ^^Mult',
+            ne_cheat_give_hypermult = 'Give Test: Hyper',
+            ne_cheat_give_aura = 'Give Test: Aura',
+            ne_cheat_give_phases = 'Give Test: Phases',
+            ne_cheat_currency = '+5 each currency',
+
+            ne_msg_omen = 'Omen!',
+            ne_msg_chain = 'Chain!',
+            ne_msg_ascension = 'Ascension!',
         },
     },
 }

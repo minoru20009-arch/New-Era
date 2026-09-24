@@ -307,30 +307,41 @@ end
 
 -- Scoring ---------------------------------------------------------------------------------------------
 
--- chips * mult becomes a Big instead of inf when the product passes 1e308.
+-- Plain numbers that already overflowed: nan -> 0, +-inf -> +-largest double (not saturated,
+-- so an overflowed chips value still scores as "a bit above 1e308" instead of 10{7}...).
 local function finite_or_clamped(v)
     if v ~= v then return 0 end
     if v == huge then return MAXD end
     if v == -huge then return -MAXD end
     return v
 end
+Big.sanitize_number = finite_or_clamped
 
+-- a * b for numbers/Bigs: a plain number while the product fits below 1e308, a Big otherwise.
+-- Returns nil if either argument is not numeric.
+function Big.safe_mul(a, b)
+    local ta, tb = type(a), type(b)
+    if ta == 'number' and tb == 'number' then
+        local r = a * b
+        if r < T and r > -T then return r end
+        return Big.mul(finite_or_clamped(a), finite_or_clamped(b))
+    end
+    if (ta == 'number' or is_big(a)) and (tb == 'number' or is_big(b)) then
+        if ta == 'number' then a = finite_or_clamped(a) end
+        if tb == 'number' then b = finite_or_clamped(b) end
+        return Big.mul(a, b)
+    end
+    return nil
+end
+
+-- chips * mult becomes a Big instead of inf when the product passes 1e308.
 local calcs = SMODS.Scoring_Calculations
 local multiply = calcs and calcs.multiply
 if multiply and type(multiply.func) == 'function' then
     local func_ref = multiply.func
     multiply.func = function(self, chips, mult, flames)
-        local tc, tm = type(chips), type(mult)
-        if tc == 'number' and tm == 'number' then
-            local r = chips * mult
-            if r < T and r > -T then return r end
-            return Big.mul(finite_or_clamped(chips), finite_or_clamped(mult))
-        end
-        if (tc == 'number' or is_big(chips)) and (tm == 'number' or is_big(mult)) then
-            if tc == 'number' then chips = finite_or_clamped(chips) end
-            if tm == 'number' then mult = finite_or_clamped(mult) end
-            return Big.mul(chips, mult)
-        end
+        local r = Big.safe_mul(chips, mult)
+        if r ~= nil then return r end
         return func_ref(self, chips, mult, flames)
     end
     hooks.multiply = true

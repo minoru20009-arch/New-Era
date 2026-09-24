@@ -226,7 +226,7 @@ Satu shader untuk semua 121 joker, dengan parameter per joker:
 
 ## 7. Daftar patch Lovely
 
-Prioritas file patch New Era: `0` (diterapkan setelah SMODS yang memakai −10/−5). Hasil cek: dari anchor L1–L15 dan L19–L20, tidak ada yang diubah oleh patch SMODS saat ini (hanya L2 berbagi titik sisip). L8 dan L16–L18 berada di area yang diubah SMODS dan wajib dicocokkan dengan dump.
+Prioritas file patch New Era: `0` (diterapkan setelah SMODS yang memakai −10/−5). Hasil cek: dari anchor L1–L15 dan L19–L20, tidak ada yang diubah oleh patch SMODS saat ini (hanya L2 berbagi titik sisip). L8 dan L18 berada di area yang diubah SMODS dan wajib dicocokkan dengan dump (simulasi dump: `lovely_sim.py` di scratchpad pengembangan, menerapkan patch SMODS dengan semantik Lovely).
 
 | # | Target | Anchor | Tujuan |
 |---|---|---|---|
@@ -246,10 +246,10 @@ Prioritas file patch New Era: `0` (diterapkan setelah SMODS yang memakai −10/�
 | L12 | `functions/state_events.lua` | `local _handname, _played, _order = 'High Card', -1, 100` | Default `ne_spark` |
 | L13 | `functions/state_events.lua` | `if G.play and G.play.cards[1] then return end` | `NE.Board.busy()` |
 | L14 | `functions/state_events.lua` | `if (not v.shattered) and (not v.destroyed) then` (di `draw_from_play_to_discard`) | Residu tetap di papan |
-| L15 | `functions/state_events.lua` | `check_for_unlock({type = 'hand_contents', cards = G.play.cards})` (before) | Fase **Pertanda** (`NE.Phases.omen()`) + snapshot tangan |
-| L16 | `functions/state_events.lua` | baris `SMODS.calculate_context({initial_scoring_step = true, …})` **(dump)** | Fase **Rantai** (sebelum) |
-| L17 | `functions/state_events.lua` | baris context `final_scoring_step` sisipan SMODS **(dump)** | Fase **Kenaikan** (sesudah) |
-| L18 | `functions/state_events.lua` | event `ease_to = G.GAME.chips + …` **(dump, diubah regex SMODS)** | Fase **Penghakiman** + `NE.Encounter.apply_score` |
+| ~~L15~~ | — | — | **Tidak dipakai (Fase 4).** Pertanda dipicu dari context SMODS `press_play` lewat event yang diantrikan (kartu sudah di `G.play`, sebelum `evaluate_play`) |
+| ~~L16~~ | — | — | **Tidak dipakai (Fase 4).** Rantai dipicu dari `initial_scoring_step` (`mod.calculate` berjalan setelah semua joker) |
+| ~~L17~~ | — | — | **Tidak dipakai (Fase 4).** Kenaikan dipicu dari `final_scoring_step` |
+| L18 | `functions/state_events.lua` | event `ease_to = G.GAME.chips + …` **(dump, diubah regex SMODS)** | Hanya untuk `NE.Encounter.apply_score` (Fase 9). Fase **Penghakiman** sendiri dipicu dari context `after` sejak Fase 4 |
 | L19 | `functions/button_callbacks.lua` | `G.STATE = G.STATES.SHOP` (di `cash_out`) | Kembali ke `NE_MAP` |
 | L20 | `functions/button_callbacks.lua` | `G.STATE = G.STATES.BLIND_SELECT` (di `toggle_shop`) | Kembali ke `NE_MAP` |
 
@@ -302,7 +302,7 @@ Profiling: `NE.Prof` (wrapper `love.timer.getTime`) di titik-titik utama + overl
 | Risiko | Mitigasi |
 |---|---|
 | Update Balatro 1.1 mengubah baris anchor | Anchor pendek & stabil; daftar L1–L20 diuji ulang saat rilis |
-| Update SMODS mengubah baris (dump) | Pin versi; uji ulang L8, L16–L18 setiap upgrade |
+| Update SMODS mengubah baris (dump) | Pin versi; uji ulang L8 dan L18 setiap upgrade. Fase skor memakai context SMODS, bukan anchor |
 | Layout papan 5×3 terlalu sempit di layar 16:9 | Skala kartu papan dapat dikonfigurasi; prototipe layout paling awal di Fase 5 |
 | Rewind/checkpoint memuat ulang run | Memakai jalur load vanilla; diuji dengan save/load bolak-balik |
 | `__eq` cdata vs number | Tes runtime di Fase 3; semua kode NE memakai `NE.Big.eq` |

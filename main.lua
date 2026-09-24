@@ -24,6 +24,14 @@ local MODULES = {
     -- content registries
     'src/content/atlases.lua',
     'src/content/rarities.lua',
+    'src/content/colours.lua',
+    -- run currencies
+    'src/economy/currency.lua',
+    -- scoring
+    'src/scoring/operators.lua',
+    'src/scoring/aura.lua',
+    'src/scoring/calc.lua',
+    'src/scoring/phases.lua',
     -- compatibility with vanilla content
     'src/compat/vanilla_pool.lua',
     -- ui

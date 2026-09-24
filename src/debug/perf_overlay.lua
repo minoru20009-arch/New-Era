@@ -80,6 +80,16 @@ local function build_lines()
         end
         lines[#lines + 1] = format('Score %s / target %s',
             fmt_value(G.GAME.chips), fmt_value(G.GAME.blind and G.GAME.blind.chips))
+        local calc = G.GAME.current_scoring_calculation
+        local aura = SMODS.Scoring_Parameters and SMODS.Scoring_Parameters.ne_aura
+        lines[#lines + 1] = format('Calc %s   Aura %s   Divinity %d   Corruption %d   Time %d/%d',
+            tostring(calc and calc.key), fmt_value(aura and aura.current),
+            NE.Currency.get('divinity'), NE.Currency.get('corruption'),
+            NE.Currency.get('time'), NE.Currency.max('time'))
+        if NE.Phases and NE.Phases.trace.last ~= '' then
+            lines[#lines + 1] = format('Phases (last hand): %s   score %s',
+                NE.Phases.trace.last, fmt_value(NE.Phases.last_score))
+        end
     end
     if NE.Big and NE.Big.stats then
         update_big_rate()

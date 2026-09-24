@@ -140,10 +140,10 @@ Stiker status sementara (dipakai joker/boss): `ne_bound` (terikat), `ne_phased` 
 |---|---|---|---|
 | 0 | **Pertanda** (Omen) | `ne_omen` | Setelah Play ditekan, **sebelum evaluasi**. Joker "pertama bertindak" (Killua), pemindahan papan (Tatsumaki, Whitebeard), time stop, snapshot untuk rewind. Trait boss tipe *Omen* juga di sini. |
 | 1 | Formasi | `evaluate_poker_hand`, `modify_scoring_hand` (SMODS) | Evaluator menghitung formasi dan `scoring_hand`. |
-| 2 | **Rantai** (Chain) | `ne_chain` (sekali per formasi sekunder) | Menambah nilai formasi sekunder; joker bisa bereaksi per formasi. |
+| 2 | **Rantai** (Chain) | `ne_chain` (sekali per formasi sekunder) | Menambah nilai formasi sekunder; joker bisa bereaksi per formasi. Dipicu di awal skor (`initial_scoring_step`), setelah nilai dasar tangan ditetapkan. |
 | 3 | Skor kartu & joker | `before` → `initial_scoring_step` → `main_scoring`/`individual`/`repetition` → `joker_main` → `final_scoring_step` (SMODS) | Pipeline SMODS apa adanya. Efek baris (§1.1) diterapkan di `individual`. |
 | 4 | **Kenaikan** (Ascension) | `ne_ascension` | Setelah semua joker, sebelum skor dihitung. Aura diterapkan; joker Heavenly boleh **menulis ulang hasil fase** (mengganti chips/mult/aura akhir). |
-| 5 | **Penghakiman** (Judgment) | `ne_judgment` (membawa `score`, `overkill`) | Setelah skor ditambahkan ke blind. Trait boss tipe *Judgment* (damage cap, regenerasi), perpindahan fase boss, limpahan (spill) ke blind lain, penyelesaian mata uang. |
+| 5 | **Penghakiman** (Judgment) | `ne_judgment` (membawa `score`, `total`, `overkill`) | Setelah skor tangan diketahui (context `after`, setelah joker; aturan per-tangan masih aktif). Trait boss tipe *Judgment* (damage cap, regenerasi), perpindahan fase boss, limpahan (spill) ke blind lain, penyelesaian mata uang. |
 | 6 | Setelah | `destroy_card`, `after` (SMODS) | Kartu formasi dibuang, residu tetap di papan. |
 
 Context tambahan untuk joker: `ne_boss_trait` (sebelum trait boss memicu; return `{ne_cancel = true}` untuk membatalkan), `ne_time_stop`, `ne_rewind`, `ne_phase_cleared`, `ne_encounter_cleared`, `ne_card_corrupted`, `ne_currency_changed`, `ne_map_node`, `ne_board_changed`, `ne_pre_game_over`.
@@ -159,7 +159,7 @@ Context tambahan untuk joker: `ne_boss_trait` (sebelum trait boss memicu; return
 | `divinity`, `corruption`, `time` | Mengubah mata uang (§4) |
 | `ne_cancel` | Membatalkan trait/aksi (di context yang mendukung) |
 
-Tetrasi dengan tinggi pecahan memakai aproksimasi linear standar OmegaNum: untuk `0 ≤ f < 1`, `x↑↑f = 1 + f·(x−1)`, lalu `x↑↑(n+f) = x^(x↑↑(n−1+f))`.
+Tinggi pecahan memakai konvensi linear yang sama dengan OmegaNum (dicek di port OmegaNum milik Amulet: `r = x^(y − floor(y))`): `x↑ⁿf = x^f` untuk `0 ≤ f ≤ 1` (dan `1 + f` untuk `−1 < f ≤ 0`), lalu `x↑ⁿ(m+f) = x↑ⁿ⁻¹(x↑ⁿ(m−1+f))`. Contoh: `10↑↑0.5 = √10`. (Dikoreksi di Fase 4 agar sesuai implementasi `NE.Big` Fase 3.)
 
 ### 3.4 Aturan keamanan skor
 

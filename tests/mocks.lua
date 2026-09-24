@@ -177,6 +177,249 @@ function M.load_patch_sources(raw)
     end
 end
 
+-- Scoring engine stand-in ---------------------------------------------------------------------------
+-- Mirrors Steamodded's scoring objects as they run in game (checked against the Steamodded
+-- 26.924.0~dev source and a simulated Lovely dump of functions/state_events.lua):
+-- Scoring_Parameter (modify / calc_effect for chips & mult keys, key routing), mod_chips /
+-- mod_mult with the parameter sync, Scoring_Calculation new/load, calculate_context order
+-- (jokers first, then mods) and an event queue.
+function M.install_scoring()
+    M.messages = {}
+    M.events = {}
+    percent, percent_delta = 0.3, 0.08
+
+    -- event manager: events run when M.flush_events() is called (like the game's queue)
+    Event = function(args) return args end
+    G.E_MANAGER = {
+        queues = {},
+        add_event = function(self, ev, queue) M.events[#M.events + 1] = ev end,
+        clear_queue = function(self) end,
+    }
+    function M.flush_events()
+        local i = 1
+        while i <= #M.events do
+            local ev = M.events[i]
+            if ev.func then ev.func() end
+            i = i + 1
+        end
+        M.events = {}
+    end
+
+    card_eval_status_text = function(card, eval_type, amt, pct, dir, extra)
+        M.messages[#M.messages + 1] = { card = card, type = eval_type, amt = amt, extra = extra }
+    end
+    juice_card = function() end
+    update_hand_text = function(config, vals)
+        M.last_hand_text = vals
+        local hand = G.GAME and G.GAME.current_round and G.GAME.current_round.current_hand
+        if hand then for k, v in pairs(vals) do hand[k] = v end end
+    end
+
+    SMODS.Calculation_Controls = { chips = true, mult = true }
+    SMODS.Scoring_Parameters = {}
+    SMODS.Scoring_Parameter_Calculation = {}
+    SMODS.scoring_parameter_keys = {
+        'chips', 'h_chips', 'chip_mod', 'mult', 'h_mult', 'mult_mod',
+        'x_chips', 'xchips', 'Xchip_mod', 'x_mult', 'Xmult', 'xmult', 'x_mult_mod', 'Xmult_mod',
+    }
+    SMODS.other_calculation_keys = { 'message', 'func' }
+    local function rebuild_keys()
+        SMODS.calculation_keys = {}
+        for _, k in ipairs(SMODS.scoring_parameter_keys) do SMODS.calculation_keys[#SMODS.calculation_keys + 1] = k end
+        for _, k in ipairs(SMODS.other_calculation_keys) do SMODS.calculation_keys[#SMODS.calculation_keys + 1] = k end
+    end
+    rebuild_keys()
+
+    local ParamBase = {}
+    ParamBase.__index = ParamBase
+    function ParamBase:modify(amount)
+        self.current = self.current + amount
+        update_hand_text({ delay = 0 }, { [self.key] = self.current })
+    end
+    SMODS.Scoring_Parameter = function(def)
+        if not def.prefix_config and SMODS.current_mod and def.key ~= 'chips' and def.key ~= 'mult' then
+            def.key = 'ne_' .. def.key
+        end
+        setmetatable(def, ParamBase)
+        def.current = def.default_value
+        SMODS.Scoring_Parameters[def.key] = def
+        for _, k in ipairs(def.calculation_keys or {}) do
+            SMODS.scoring_parameter_keys[#SMODS.scoring_parameter_keys + 1] = k
+            SMODS.Scoring_Parameter_Calculation[k] = def.key
+        end
+        rebuild_keys()
+        if SMODS.Calculation_Controls[def.key] == nil then SMODS.Calculation_Controls[def.key] = false end
+        return def
+    end
+
+    -- chips and mult as defined by Steamodded (modify/calc_effect arithmetic kept identical)
+    SMODS.Scoring_Parameter({
+        key = 'chips', default_value = 0,
+        calculation_keys = {},
+        modify = function(self, amount, skip)
+            if not skip then hand_chips = mod_chips(self.current + amount) end
+            self.current = (hand_chips or 0) + (skip or 0)
+            update_hand_text({ delay = 0 }, { chips = self.current })
+        end,
+        calc_effect = function(self, effect, scored_card, key, amount)
+            if (key == 'chips' or key == 'h_chips' or key == 'chip_mod') and amount then
+                self:modify(amount); return true
+            end
+            if (key == 'x_chips' or key == 'xchips' or key == 'Xchip_mod') and amount ~= 1 then
+                self:modify(hand_chips * (amount - 1)); return true
+            end
+        end,
+    })
+    SMODS.Scoring_Parameter({
+        key = 'mult', default_value = 0,
+        calculation_keys = {},
+        modify = function(self, amount, skip)
+            if not skip then mult = mod_mult(self.current + amount) end
+            self.current = (mult or 0) + (skip or 0)
+            update_hand_text({ delay = 0 }, { mult = self.current })
+        end,
+        calc_effect = function(self, effect, scored_card, key, amount)
+            if (key == 'mult' or key == 'h_mult' or key == 'mult_mod') and amount then
+                self:modify(amount); return true
+            end
+            if (key == 'x_mult' or key == 'xmult' or key == 'Xmult' or key == 'x_mult_mod' or key == 'Xmult_mod') and amount ~= 1 then
+                self:modify(mult * (amount - 1)); return true
+            end
+        end,
+    })
+    for _, k in ipairs({ 'chips', 'h_chips', 'chip_mod', 'x_chips', 'xchips', 'Xchip_mod' }) do
+        SMODS.Scoring_Parameter_Calculation[k] = 'chips'
+    end
+    for _, k in ipairs({ 'mult', 'h_mult', 'mult_mod', 'x_mult', 'Xmult', 'xmult', 'x_mult_mod', 'Xmult_mod' }) do
+        SMODS.Scoring_Parameter_Calculation[k] = 'mult'
+    end
+
+    -- vanilla mod_chips/mod_mult with Steamodded's sync (functions/misc_functions.lua, dump)
+    mod_chips = function(_chips)
+        if G.GAME.modifiers and G.GAME.modifiers.chips_dollar_cap then
+            _chips = math.min(_chips, math.max(G.GAME.dollars, 0))
+        end
+        if _chips ~= hand_chips or _chips ~= SMODS.Scoring_Parameters.chips.current then
+            SMODS.Scoring_Parameters.chips:modify(nil, _chips - (hand_chips or 0))
+        end
+        return _chips
+    end
+    mod_mult = function(_mult)
+        if _mult ~= mult or _mult ~= SMODS.Scoring_Parameters.mult.current then
+            SMODS.Scoring_Parameters.mult:modify(nil, _mult - (mult or 0))
+        end
+        return _mult
+    end
+
+    SMODS.calculate_individual_effect = function(effect, scored_card, key, amount, from_edition)
+        if SMODS.Scoring_Parameter_Calculation[key] then
+            return SMODS.Scoring_Parameters[SMODS.Scoring_Parameter_Calculation[key]]:calc_effect(effect, scored_card, key, amount, from_edition)
+        end
+        if key == 'message' then
+            card_eval_status_text(scored_card, 'extra', nil, nil, nil, effect)
+            return true
+        end
+        if key == 'func' then effect.func(); return true end
+    end
+    SMODS.calculate_effect = function(effect, scored_card)
+        for _, key in ipairs(SMODS.calculation_keys) do
+            if effect[key] then SMODS.calculate_individual_effect(effect, scored_card, key, effect[key]) end
+        end
+    end
+
+    -- jokers (G.jokers.cards, each { config = { center = def }, ability = ... }) then mods
+    M.contexts = {}
+    SMODS.calculate_context = function(context)
+        M.contexts[#M.contexts + 1] = context
+        for _, card in ipairs(G.jokers and G.jokers.cards or {}) do
+            local center = card.config and card.config.center
+            if center and center.calculate then
+                local eff = center:calculate(card, context)
+                if type(eff) == 'table' then SMODS.calculate_effect(eff, card) end
+            end
+        end
+        if NE and NE.mod and NE.mod.calculate then
+            local eff = NE.mod.calculate(NE.mod, context)
+            if type(eff) == 'table' then SMODS.calculate_effect(eff, nil) end
+        end
+    end
+
+    local CalcBase = {}
+    CalcBase.__index = CalcBase
+    function CalcBase:new(def)
+        def = def or {}
+        for key in pairs(SMODS.Calculation_Controls) do SMODS.Calculation_Controls[key] = false end
+        for _, key in ipairs(self.parameters) do
+            SMODS.Calculation_Controls[key] = true
+            if G.GAME and G.GAME.current_round then
+                G.GAME.current_round.current_hand[key] = SMODS.Scoring_Parameters[key].default_value
+            end
+        end
+        return setmetatable(def, { __index = self })
+    end
+    SMODS.Scoring_Calculations = {}
+    SMODS.Scoring_Calculation = function(def)
+        def.key = (def.key == 'multiply') and def.key or ('ne_' .. def.key)
+        def.parameters = def.parameters or { 'chips', 'mult' }
+        setmetatable(def, CalcBase)
+        SMODS.Scoring_Calculations[def.key] = def
+        return def
+    end
+    SMODS.Scoring_Calculation({ key = 'multiply', func = function(self, chips, mult, flames) return chips * mult end })
+
+    SMODS.get_scoring_parameter = function(key, flames)
+        if flames then return G.GAME.current_round.current_hand[key] end
+        return SMODS.Scoring_Parameters[key].current or SMODS.Scoring_Parameters[key].default_value
+    end
+    SMODS.calculate_round_score = function(flames)
+        local calc = G.GAME.current_scoring_calculation or SMODS.Scoring_Calculations.multiply
+        return calc:func(SMODS.get_scoring_parameter('chips', flames), SMODS.get_scoring_parameter('mult', flames), flames)
+    end
+
+    -- UI builders used by the ne_ascend layout
+    DynaText = function(args) return { args = args, update_text = function() end } end
+    SMODS.GUI = {
+        score_container = function(args) return { n = 'R', config = { id = 'hand_' .. args.type .. '_area', w = args.w }, args = args } end,
+        operator = function(scale) return { n = 'C', config = { id = 'hand_operator_container' } } end,
+    }
+    G.LANGUAGES = { ['en-us'] = { font = {} } }
+end
+
+-- Plays one hand through the same context sequence as evaluate_play (Steamodded dump):
+-- press_play (+ queued Omen) -> base chips/mult -> initial_scoring_step -> joker_main ->
+-- final_scoring_step -> score -> ease_to -> after -> parameter reset.
+function M.play_hand(base_chips, base_mult)
+    G.play = G.play or { cards = {} }
+    SMODS.calculate_context({ press_play = true })
+    M.flush_events()
+    mult = mod_mult(base_mult)
+    hand_chips = mod_chips(base_chips)
+    SMODS.calculate_context({ initial_scoring_step = true, full_hand = G.play.cards, scoring_hand = {} })
+    SMODS.calculate_context({ joker_main = true, full_hand = G.play.cards, scoring_hand = {} })
+    SMODS.calculate_context({ final_scoring_step = true, full_hand = G.play.cards, scoring_hand = {} })
+    local score = SMODS.calculate_round_score()
+    local ease_to = G.GAME.chips + math.floor(score)
+    SMODS.last_hand_score = SMODS.calculate_round_score()
+    SMODS.calculate_context({ after = true, full_hand = G.play.cards, scoring_hand = {} })
+    G.GAME.chips = ease_to
+    for _, p in pairs(SMODS.Scoring_Parameters) do p.current = p.default_value end
+    return score
+end
+
+-- Adds a joker card for a registered SMODS.Joker definition (key without prefix).
+function M.add_joker(key)
+    for _, def in ipairs(SMODS.Joker.list) do
+        if def.key == key then
+            local extra = {}
+            for k, v in pairs(def.config.extra or {}) do extra[k] = v end
+            local card = { config = { center = def }, ability = { extra = extra } }
+            G.jokers.cards[#G.jokers.cards + 1] = card
+            return card
+        end
+    end
+    error('no joker ' .. key)
+end
+
 -- A callable "class": calling it records the definition and returns it.
 local function registry(name, on_register)
     local obj_table = {}
@@ -221,6 +464,15 @@ function M.install()
     -- game globals --------------------------------------------------------------------------
     HEX = function(h) return { h } end
     localize = function(key)
+        if type(key) == 'table' and key.type == 'variable' then
+            local v = M.loc and M.loc.misc and M.loc.misc.v_dictionary and M.loc.misc.v_dictionary[key.key]
+            if not v then return 'ERROR' end
+            return (v:gsub('#(%d+)#', function(i)
+                local x = key.vars and key.vars[tonumber(i)]
+                if type(x) == 'number' then return number_format(x, 1000000) end
+                return tostring(x)
+            end))
+        end
         local d = M.loc and M.loc.misc and M.loc.misc.dictionary
         return (d and d[key]) or 'ERROR'
     end
@@ -265,8 +517,15 @@ function M.install()
             end
             return sign .. string.format(fac >= 100 and '%.1fe%i' or fac >= 10 and '%.2fe%i' or '%.3fe%i', mant, fac)
         end
-        local s = string.format('%.0f', num):reverse():gsub('(%d%d%d)', '%1,'):gsub(',$', ''):reverse()
-        return sign .. s
+        local formatted
+        if num ~= math.floor(num) and num < 100 then
+            formatted = string.format(num >= 10 and '%.1f' or '%.2f', num)
+            if formatted:sub(-1) == '0' then formatted = formatted:gsub('%.?0+$', '') end
+            if num < 0.01 then return tostring(num) end
+        else
+            formatted = string.format('%.0f', num)
+        end
+        return sign .. formatted:reverse():gsub('(%d%d%d)', '%1,'):gsub(',$', ''):reverse()
     end
     score_number_scale = function(scale, amt)
         if type(amt) ~= 'number' then return 0.7 * (scale or 1) end
@@ -411,14 +670,7 @@ function M.install()
         }
     end
 
-    SMODS.Scoring_Parameters = { chips = {}, mult = {} }
-    SMODS.Scoring_Calculations = {
-        multiply = { key = 'multiply', func = function(self, chips, mult, flames) return chips * mult end },
-    }
-    SMODS.calculate_round_score = function(flames)
-        local h = G.GAME.current_round.current_hand
-        return SMODS.Scoring_Calculations.multiply:func(h.chips, h.mult, flames)
-    end
+    M.install_scoring()
 
     SMODS.Atlas = registry('Atlas')
     SMODS.Rarity = registry('Rarity', function(def)

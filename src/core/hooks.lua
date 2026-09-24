@@ -7,10 +7,15 @@ local Hooks = NE.Hooks
 Hooks.flags = Hooks.flags or {}      -- ordered list of context flags with handlers
 Hooks.handlers = Hooks.handlers or {} -- flag -> ordered list of { id, fn }
 
+Hooks.ORDER_DEFAULT = 0
+Hooks.ORDER_CLEANUP = 100 -- state cleanup (e.g. hand rules) after every other handler
+
 -- Registers `fn(context)` for contexts where `context[flag]` is truthy.
+-- Handlers run by `order` (lower first, default 0), then by registration.
 -- Re-registering the same id replaces the previous handler.
 -- A handler may return a calculate effect table; multiple effects are merged.
-function Hooks.on_context(flag, id, fn)
+function Hooks.on_context(flag, id, fn, order)
+    order = order or Hooks.ORDER_DEFAULT
     local list = Hooks.handlers[flag]
     if not list then
         list = {}
@@ -19,11 +24,18 @@ function Hooks.on_context(flag, id, fn)
     end
     for i = 1, #list do
         if list[i].id == id then
-            list[i].fn = fn
-            return
+            table.remove(list, i)
+            break
         end
     end
-    list[#list + 1] = { id = id, fn = fn }
+    local pos = #list + 1
+    for i = 1, #list do
+        if list[i].order > order then
+            pos = i
+            break
+        end
+    end
+    table.insert(list, pos, { id = id, fn = fn, order = order })
 end
 
 function Hooks.dispatch(context)

@@ -18,6 +18,12 @@ local function defaults()
             cards_destroyed = 0,
             jokers_destroyed = 0,
         },
+        currency = {
+            divinity = 0,
+            corruption = 0,
+            time = 0,
+            time_cap = 10,
+        },
     }
 end
 

@@ -65,7 +65,22 @@ Debug.CHEATS = {
         end,
     },
     { id = 'give_overflow', label = 'ne_cheat_give_overflow', run = function() give_joker('j_ne_test_overflow') end },
+    -- Phase 4: score operators and phases
+    { id = 'give_emult', label = 'ne_cheat_give_emult', run = function() give_joker('j_ne_test_emult') end },
+    { id = 'give_eemult', label = 'ne_cheat_give_eemult', run = function() give_joker('j_ne_test_eemult') end },
+    { id = 'give_hypermult', label = 'ne_cheat_give_hypermult', run = function() give_joker('j_ne_test_hypermult') end },
+    { id = 'give_aura', label = 'ne_cheat_give_aura', run = function() give_joker('j_ne_test_aura') end },
+    { id = 'give_phases', label = 'ne_cheat_give_phases', run = function() give_joker('j_ne_test_phases') end },
+    {
+        id = 'currency',
+        label = 'ne_cheat_currency',
+        run = function()
+            for _, kind in ipairs(NE.Currency.ORDER) do NE.Currency.add(kind, 5, 'cheat') end
+        end,
+    },
 }
+
+Debug.CHEAT_COLUMNS = 3
 
 for _, cheat in ipairs(Debug.CHEATS) do
     G.FUNCS['ne_cheat_' .. cheat.id] = function(e)
@@ -87,27 +102,29 @@ local function title_row(key)
     }
 end
 
--- Two columns of buttons.
+-- Buttons in Debug.CHEAT_COLUMNS columns, filled row by row.
 local function cheat_rows()
-    local left, right = {}, {}
+    local columns = {}
+    for c = 1, Debug.CHEAT_COLUMNS do columns[c] = {} end
     for i, cheat in ipairs(Debug.CHEATS) do
-        local column = (i % 2 == 1) and left or right
+        local column = columns[(i - 1) % Debug.CHEAT_COLUMNS + 1]
         column[#column + 1] = UIBox_button({
             button = 'ne_cheat_' .. cheat.id,
             label = { localize(cheat.label) },
-            minw = 3.6,
-            minh = 0.6,
-            scale = 0.4,
+            minw = 3.4,
+            minh = 0.55,
+            scale = 0.38,
             colour = G.C.BLUE,
         })
+    end
+    local nodes = {}
+    for c = 1, Debug.CHEAT_COLUMNS do
+        nodes[c] = { n = G.UIT.C, config = { align = 'tm', padding = 0.05 }, nodes = columns[c] }
     end
     return {
         n = G.UIT.R,
         config = { align = 'cm', padding = 0.1 },
-        nodes = {
-            { n = G.UIT.C, config = { align = 'cm', padding = 0.05 }, nodes = left },
-            { n = G.UIT.C, config = { align = 'cm', padding = 0.05 }, nodes = right },
-        },
+        nodes = nodes,
     }
 end
 
