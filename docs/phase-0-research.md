@@ -261,6 +261,8 @@ Titik yang disentuh Amulet (checklist minimal untuk lib kita) [V]:
 
 ## 10. Yang saya butuhkan dari Anda sebelum Fase 1
 
+> **Status:** semua poin di bawah sudah diputuskan (lihat `docs/phase-1/README.md`, tabel "Keputusan yang dikunci").
+
 1. ~~Source vanilla~~ — **sudah diterima dan dicek (1.0.1o-FULL).** Source tetap hanya di lokal, tidak masuk repo.
 2. **Nasib konten vanilla** (joker, planet, boss, poker hand): usul saya, dinonaktifkan dari pool dan diganti total oleh konten New Era. Hand vanilla boleh bertahan sebagai subset tersembunyi.
 3. **Representasi big number:** usul saya, LuaJIT FFI cdata (gaya Amulet) dengan namespace `NE.Big`.
