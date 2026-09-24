@@ -86,6 +86,17 @@ local function build_lines()
             tostring(calc and calc.key), fmt_value(aura and aura.current),
             NE.Currency.get('divinity'), NE.Currency.get('corruption'),
             NE.Currency.get('time'), NE.Currency.max('time'))
+        local Board = NE.Board
+        if Board and Board.area() then
+            local staged = 0
+            for card in pairs(Board.stage) do
+                if Board.staged_slot(card) then staged = staged + 1 end
+            end
+            local cols, rows = Board.dims()
+            lines[#lines + 1] = format('Board %dx%d   cards %d (Residue %d / max %d)   staged %d   marked %d   free %d   v%d',
+                cols, rows, #G.play.cards, #Board.residues(), Board.residue_cap(), staged,
+                #Board.marked, Board.free_slots(), Board.version)
+        end
         if NE.Phases and NE.Phases.trace.last ~= '' then
             lines[#lines + 1] = format('Phases (last hand): %s   score %s',
                 NE.Phases.trace.last, fmt_value(NE.Phases.last_score))

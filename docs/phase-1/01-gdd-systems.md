@@ -30,16 +30,18 @@ Notasi yang dipakai di seluruh dokumen:
 | Belakang | **+2 Mult** per kartu |
 
 - **Persistensi:** kartu yang sudah di papan **tetap tinggal** antar tangan dalam satu ronde. Kartu yang menjadi bagian formasi yang mencetak skor akan **terpakai** (dibuang) setelah tangan selesai. Kartu lain tetap di tempat sebagai **Residu** dan bisa membentuk formasi dengan kartu baru. Saat ronde berakhir, seluruh papan dibuang.
-- **Residu terkunci:** kartu residu tidak bisa dipindah kecuali oleh efek (mis. Tatsumaki, Sasuke). Aksi **Discard** boleh memilih kartu residu di papan (memakai jatah discard seperti biasa).
+- **Batas Residu** (ditambahkan di Fase 5): paling banyak *petak − batas main* kartu Residu (10 pada papan 5×3). Residu tertua keluar lebih dulu di akhir tangan. Papan selalu muat satu tangan penuh, sehingga ronde tidak bisa terkunci oleh papan penuh.
+- **Residu terkunci:** kartu residu tidak bisa dipindah kecuali oleh efek (mis. Tatsumaki, Sasuke). Aksi **Discard** boleh memilih kartu residu di papan: klik untuk memilih. Discard memakai jatah discard seperti biasa, dan batas 5 kartu per discard dihitung bersama kartu tangan.
+- Ronde yang hanya menyisakan Residu (tangan dan dek kosong) langsung berakhir, sama seperti kehabisan kartu di vanilla.
 
 ### 1.2 Menempatkan kartu (alur satu tangan)
 
-1. **Tempatkan:** seret kartu dari Tangan Utama atau Tangan Bayangan ke petak kosong. Kartu itu berstatus *staged*. Klik kartu staged untuk mengembalikannya ke tangan.
+1. **Tempatkan:** seret kartu dari Tangan Utama atau Tangan Bayangan ke petak kosong, atau pilih kartu lalu klik petak kosong. Kartu itu berstatus *staged*: digambar di petaknya, tetapi tetap kartu tangan yang terpilih (tarot dan Discard memperlakukannya seperti pilihan vanilla). Klik kartu staged, atau seret keluar dari papan, untuk mengembalikannya ke tangan.
 2. **Main cepat:** jika pemain hanya meng-highlight kartu (tanpa menyeret) lalu menekan Play, kartu ditempatkan otomatis: Baris Tengah kiri→kanan, lalu Depan, lalu Belakang. Dengan cara ini gaya bermain vanilla tetap bisa dipakai.
 3. **Batas main:** maksimal **5 kartu baru** per tangan (dapat diubah efek; memakai `SMODS.change_play_limit`).
 4. **Pratinjau:** setiap kali penempatan berubah, evaluator dijalankan dan nama formasi ditampilkan di area teks tangan (mis. `Triad + Tautan Kembar`). Evaluasi dipicu event, **bukan per frame**.
 5. **Play:** fase skor berjalan (§3.2). Kartu formasi dibuang, residu tetap tinggal.
-6. **Kontroler:** tombol khusus memindahkan fokus ke papan; D-pad memilih petak; A menempatkan kartu yang di-highlight; B kembali ke tangan.
+6. **Kontroler:** LB memindahkan fokus antara tangan dan papan; D-pad memilih petak; A menempatkan kartu yang di-highlight (atau memilih Residu untuk discard); B kembali ke tangan.
 
 ### 1.3 Garis dan bentuk yang dikenali
 

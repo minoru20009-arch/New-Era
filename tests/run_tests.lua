@@ -307,7 +307,7 @@ test('config tab', function()
     for _, row in ipairs(ui.nodes) do
         if row.nodes and row.nodes[1] and row.nodes[1].n == 'toggle' then toggles = toggles + 1 end
     end
-    eq(toggles, 5, 'five toggles')
+    eq(toggles, 6, 'six toggles')
 end)
 
 test('localization', function()
@@ -342,6 +342,10 @@ big_spec({ test = test, check = check, eq = eq, M = M })
 -- Phase 4: scoring operators, Aura, phases, currencies
 local scoring_spec = assert(loadfile(M.root .. '/tests/scoring_spec.lua'))()
 scoring_spec({ test = test, check = check, eq = eq, M = M })
+
+-- Phase 5: board
+local board_spec = assert(loadfile(M.root .. '/tests/board_spec.lua'))()
+board_spec({ test = test, check = check, eq = eq, M = M })
 
 print(('\n%d passed, %d failed'):format(passed, failed))
 os.exit(failed == 0 and 0 or 1)

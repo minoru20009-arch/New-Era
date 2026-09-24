@@ -27,6 +27,7 @@ end
 
 NE.mod.config_tab = function()
     local cfg = NE.cfg()
+    cfg.board = cfg.board or { small_cards = false }
     return {
         n = G.UIT.ROOT,
         config = { align = 'cm', padding = 0.2, colour = G.C.BLACK, r = 0.1, minw = 8 },
@@ -36,6 +37,7 @@ NE.mod.config_tab = function()
             toggle('ne_cfg_hide_planets', cfg.hide_vanilla, 'planets'),
             toggle('ne_cfg_hide_blinds', cfg.hide_vanilla, 'blinds'),
             text_row('ne_cfg_note', 0.3, G.C.UI.TEXT_INACTIVE),
+            toggle('ne_cfg_board_small', cfg.board, 'small_cards'),
             toggle('ne_cfg_debug', cfg.debug, 'enabled'),
             toggle('ne_cfg_test_jokers', cfg.debug, 'test_jokers'),
         },

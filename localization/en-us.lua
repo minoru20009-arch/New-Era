@@ -9,7 +9,7 @@ return {
                     'and 121 crossover jokers in three ranks:',
                     '{C:inactive}Unranked{}, {C:red}Demonic{} and {C:gold}Heavenly{}.',
                     ' ',
-                    '{C:inactive}Development build (Phase 4: scoring & phases).{}',
+                    '{C:inactive}Development build (Phase 5: board).{}',
                 },
             },
         },
@@ -120,6 +120,7 @@ return {
             ne_cfg_hide_blinds = 'Hide vanilla blinds',
             ne_cfg_debug = 'Debug tools (F9 / F10)',
             ne_cfg_test_jokers = 'Test jokers in pools',
+            ne_cfg_board_small = 'Smaller board cards',
             ne_cfg_note = 'Planets/blinds take effect from Phase 6/10',
 
             ne_cheat_title = 'New Era cheats',
@@ -145,6 +146,10 @@ return {
             ne_cheat_give_aura = 'Give Test: Aura',
             ne_cheat_give_phases = 'Give Test: Phases',
             ne_cheat_currency = '+5 each currency',
+            ne_cheat_board_fill = 'Board: +4 Residue',
+            ne_cheat_board_size = 'Board: size 5x3/6x4/4x2',
+            ne_cheat_board_shuffle = 'Board: shuffle Residue',
+            ne_cheat_board_clear = 'Board: clear',
 
             ne_msg_omen = 'Omen!',
             ne_msg_chain = 'Chain!',

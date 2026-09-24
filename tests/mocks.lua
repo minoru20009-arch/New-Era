@@ -164,9 +164,15 @@ end
 }
 
 -- Loads the patch sources, patched like Lovely would (or unpatched when raw is true).
-function M.load_patch_sources(raw)
-    M.patch_results = {}
+-- `only`: reload a single target (reloading all would drop New Era's Lua wraps of them).
+function M.load_patch_sources(raw, only)
+    local kept = {}
+    for _, r in ipairs(M.patch_results or {}) do
+        if only and r.target ~= only then kept[#kept + 1] = r end
+    end
+    M.patch_results = kept
     for target, src in pairs(M.patch_sources) do
+        if only and target ~= only then goto continue end
         local patched = src
         if not raw then
             local results
@@ -174,6 +180,7 @@ function M.load_patch_sources(raw)
             for _, r in ipairs(results) do r.target = target; M.patch_results[#M.patch_results + 1] = r end
         end
         assert(loadstring(patched, '=' .. target))()
+        ::continue::
     end
 end
 
@@ -456,7 +463,11 @@ function M.install()
         },
         graphics = setmetatable({
             newFont = function() return font end,
-        }, { __index = function() return function() end end }),
+        }, { __index = function(t, k)
+            local f = function() end
+            rawset(t, k, f)
+            return f
+        end }),
     }
     love.update = function(dt) M.update_calls = (M.update_calls or 0) + 1 end
     love.draw = function() M.draw_calls = (M.draw_calls or 0) + 1 end
@@ -586,10 +597,6 @@ function M.install()
         return ok and res or nil
     end
 
-    Object = {}
-    function Object:is(cls) return getmetatable(self) and getmetatable(self).__class == cls end
-    M.new_object = function() return setmetatable({}, { __index = Object, __class = Object }) end
-
     Game = {}
     function Game:init_game_object()
         return {
@@ -600,14 +607,26 @@ function M.install()
             current_round = { current_hand = { chips = 0, mult = 0 } },
         }
     end
+    -- args.areas: create the card areas like the game does (custom_card_areas, then the
+    -- saved areas are loaded into them)
     function Game:start_run(args)
         self.GAME = (args and args.savetext and args.savetext.GAME) or self:init_game_object()
+        if args and args.areas then
+            M.areas.create_areas()
+            if SMODS.current_mod.custom_card_areas then SMODS.current_mod.custom_card_areas(self) end
+            local saved = args.savetext and args.savetext.cardAreas
+            if saved then
+                for k, v in pairs(saved) do
+                    if G[k] then G[k]:load(v) end
+                end
+            end
+        end
     end
     function Game:save_settings() M.saved_settings = (M.saved_settings or 0) + 1 end
     function Game:save_progress() M.saved_progress = (M.saved_progress or 0) + 1 end
 
     G = {
-        STATES = { SELECTING_HAND = 1, HAND_PLAYED = 2, SHOP = 5, BLIND_SELECT = 7 },
+        STATES = { SELECTING_HAND = 1, HAND_PLAYED = 2, DRAW_TO_HAND = 3, NEW_ROUND = 4, SHOP = 5, PLAY_TAROT = 6, BLIND_SELECT = 7 },
         STAGES = { MAIN_MENU = 1, RUN = 2, SANDBOX = 3 },
         FUNCS = {
             overlay_menu = function(args) M.last_overlay = args end,
@@ -615,9 +634,14 @@ function M.install()
         },
         P_BLINDS = {},
         C = {
-            RED = {}, WHITE = {}, BLUE = {}, BLACK = {},
-            UI = { TEXT_LIGHT = {}, TEXT_INACTIVE = {} },
+            RED = { 1, 0, 0, 1 }, WHITE = { 1, 1, 1, 1 }, BLUE = { 0, 0, 1, 1 }, BLACK = { 0, 0, 0, 1 },
+            CHIPS = { 0, 0.6, 1, 1 }, MULT = { 1, 0.37, 0.33, 1 },
+            UI = { TEXT_LIGHT = {}, TEXT_INACTIVE = {}, BACKGROUND_INACTIVE = { 0.3, 0.3, 0.3, 1 } },
         },
+        -- screen measures from the game's globals.lua
+        TILE_W = 20, TILE_H = 11.5, TILESIZE = 20, TILESCALE = 1,
+        CARD_W = 2.4 * 35 / 41, CARD_H = 2.4 * 47 / 41, HIGHLIGHT_H = 0.2 * 2.4 * 47 / 41,
+        MIN_CLICK_DIST = 0.9,
         UIT = { ROOT = 'ROOT', R = 'R', C = 'C', T = 'T' },
         ARGS = {},
         SETTINGS = { profile = 1 },
@@ -680,6 +704,12 @@ function M.install()
     SMODS.Keybind = registry('Keybind')
     SMODS.add_card = function(t) M.added_cards[#M.added_cards + 1] = t; return t end
 
+    -- object classes, card areas and the hand flow (board, Phase 5)
+    M.areas = require('mock_areas')
+    M.areas.install(M)
+    G.CONTROLLER = Controller()
+    for target, src in pairs(M.areas.patch_sources) do M.patch_sources[target] = src end
+
     -- game code that New Era patches, with lovely/*.toml applied (as Lovely does at start-up)
     M.load_patch_sources()
 
@@ -697,6 +727,24 @@ end
 function M.load_mod()
     local src = assert(read_file(M.root .. '/main.lua'))
     assert(loadstring(src, '=main.lua'))()
+end
+
+-- Starts a run with real (mock) card areas and a board, selecting a hand in a blind.
+function M.start_board_run(savetext)
+    G:start_run({ savetext = savetext, areas = true })
+    G.STAGE = G.STAGES.RUN
+    G.STATE = G.STATES.SELECTING_HAND
+    local g = G.GAME
+    g.starting_params = g.starting_params or { play_limit = 5, discard_limit = 5 }
+    g.hands_played = g.hands_played or 0
+    g.current_round.discards_left = g.current_round.discards_left or 3
+    g.current_round.discards_used = g.current_round.discards_used or 0
+    g.facing_blind = true
+    M.draw_log = {}
+    M.drawhash = {}
+    M.events = {}
+    M.contexts = {}
+    return G.play
 end
 
 -- Starts a fresh fake run.

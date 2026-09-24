@@ -10,6 +10,11 @@ return {
         blinds = false,
     },
 
+    board = {
+        -- Draws the board cards smaller (for small windows or if the board feels crowded).
+        small_cards = false,
+    },
+
     debug = {
         -- Enables F9 (performance overlay) and F10 (cheat menu).
         enabled = true,

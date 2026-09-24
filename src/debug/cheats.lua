@@ -11,6 +11,46 @@ local function in_blind()
     return in_run() and G.STATE == G.STATES.SELECTING_HAND and G.GAME.blind ~= nil
 end
 
+local function board_ready()
+    return in_blind() and NE.Board.can_place()
+end
+
+-- Moves up to n cards from the deck onto the board as Residue (within the Residue limit).
+-- One event does the whole move, so repeated clicks never pick the same deck card twice.
+function Debug.board_fill(n)
+    local Board = NE.Board
+    if Board.residue_cap() - #Board.residues() <= 0 or not G.deck.cards[1] then
+        play_sound('cancel')
+        return false
+    end
+    G.E_MANAGER:add_event(Event({
+        func = function()
+            local room = Board.residue_cap() - #Board.residues()
+            for _ = 1, math.min(n, room) do
+                if not G.deck.cards[1] then break end
+                G.play:draw_card_from(G.deck)
+            end
+            for _, card in ipairs(G.play.cards) do card.ability.ne_residue = true end
+            Board.bump()
+            return true
+        end,
+    }))
+    return true
+end
+
+Debug.BOARD_SIZES = { { 5, 3 }, { 6, 4 }, { 4, 2 } }
+
+-- Cycles the board through 5x3 -> 6x4 -> 4x2 -> 5x3.
+function Debug.board_next_size()
+    local cols, rows = NE.Board.dims()
+    local sizes = Debug.BOARD_SIZES
+    local next_i = 1
+    for i, size in ipairs(sizes) do
+        if size[1] == cols and size[2] == rows then next_i = i % #sizes + 1 end
+    end
+    NE.Board.resize(sizes[next_i][1], sizes[next_i][2])
+end
+
 local function give_joker(key)
     if #G.jokers.cards >= G.jokers.config.card_limit then
         play_sound('cancel')
@@ -78,6 +118,11 @@ Debug.CHEATS = {
             for _, kind in ipairs(NE.Currency.ORDER) do NE.Currency.add(kind, 5, 'cheat') end
         end,
     },
+    -- Phase 5: board
+    { id = 'board_fill', label = 'ne_cheat_board_fill', available = board_ready, run = function() Debug.board_fill(4) end },
+    { id = 'board_size', label = 'ne_cheat_board_size', available = board_ready, run = function() Debug.board_next_size() end },
+    { id = 'board_shuffle', label = 'ne_cheat_board_shuffle', available = board_ready, run = function() NE.Board.shuffle_residues('ne_cheat') end },
+    { id = 'board_clear', label = 'ne_cheat_board_clear', available = board_ready, run = function() NE.Board.clear_to_discard() end },
 }
 
 Debug.CHEAT_COLUMNS = 3

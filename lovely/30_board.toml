@@ -1,0 +1,63 @@
+# New Era - board (src/board/). The game treats "G.play has cards" as "a hand is being played".
+# On the board, Residue cards stay in G.play between hands, so those checks ask NE.Board.busy()
+# (G.play holds cards that are not Residue) instead. NE.Board.keeps(card) keeps Residue on the
+# board when the hand's cards are discarded.
+# The out-of-cards check in Game:update_selecting_hand is handled by a Lua wrap instead
+# (board_area.lua), because patching it would call end_round() on every frame.
+# Priority 0: applied after Steamodded (-10/-5); none of these lines is changed by Steamodded.
+# Every payload is nil-safe: if New Era failed to load, the original behaviour remains.
+
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# L13a - play_cards_from_highlighted refuses to play while G.play has cards.
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "if G.play and G.play.cards[1] then return end"
+position = "at"
+payload = "if G.play and G.play.cards[1] and not (NE and NE.Board and not NE.Board.busy()) then return end"
+match_indent = true
+times = 1
+
+# L14 - draw_from_play_to_discard: Residue stays on the board.
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "if (not v.shattered) and (not v.destroyed) then"
+position = "at"
+payload = "if (not v.shattered) and (not v.destroyed) and not (NE and NE.Board and NE.Board.keeps(v)) then"
+match_indent = true
+times = 1
+
+# L13b - Card:can_use_consumeable: consumables are unusable while G.play has cards.
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "if not skip_check and ((G.play and #G.play.cards > 0) or"
+position = "at"
+payload = "if not skip_check and ((G.play and #G.play.cards > 0 and not (NE and NE.Board and not NE.Board.busy())) or"
+match_indent = true
+times = 1
+
+# L13b - Card:can_sell_card: jokers cannot be sold while G.play has cards.
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "if (G.play and #G.play.cards > 0) or"
+position = "at"
+payload = "if (G.play and #G.play.cards > 0 and not (NE and NE.Board and not NE.Board.busy())) or"
+match_indent = true
+times = 1
+
+# L13c - Controller:queue_R_cursor_press: right click does not deselect while G.play has cards.
+[[patches]]
+[patches.pattern]
+target = "engine/controller.lua"
+pattern = "if (G.play and #G.play.cards > 0) or"
+position = "at"
+payload = "if (G.play and #G.play.cards > 0 and not (NE and NE.Board and not NE.Board.busy())) or"
+match_indent = true
+times = 1

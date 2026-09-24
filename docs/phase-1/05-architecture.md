@@ -146,19 +146,30 @@ Hanya ASCII (font pixel Balatro tidak dijamin punya `↑`). Hasil format di-cach
 
 ### 4.1 `G.play` sebagai papan
 
-- Area `G.play` vanilla (`card_limit = 5`, `type = 'play'`) diubah di `mod.custom_card_areas`: `card_limit = cols × rows`, `config.ne_board = {cols, rows}`, ukuran `T` diperbesar.
-- `CardArea:align_cards` di-wrap: jika `config.ne_board`, kartu diposisikan dari slot (`card.ability.ne_slot`), dengan skala per baris untuk ilusi kedalaman (Belakang 0.84, Tengah 0.92, Depan 1.0). Tipe area lain → fungsi asli.
-- Slot disimpan di `card.ability.ne_slot` → ikut `Card:save` otomatis.
-- `CardArea:emplace` pada papan di-wrap untuk menetapkan slot otomatis bila kartu masuk tanpa slot (jalur "main cepat").
-- `NE.Board.resize` mengubah `config.ne_board` dan memindah kartu yang keluar batas ke slot kosong (atau ke discard jika penuh).
+- Area `G.play` vanilla (`type = 'play'`) dijadikan papan di `mod.custom_card_areas` (sebelum load): `config.ne_board = {cols, rows}` (default 5×3, maks 8×5), `card_limit = cols × rows`. `T` area **tidak** diubah, karena background (`SPLASH_BACK`) dan teks "Not Allowed!" berpusat pada `G.play`. Tata letak papan dihitung sendiri dari posisi baris joker dan tangan (`src/board/grid.lua`).
+- `CardArea:align_cards` di-wrap untuk papan. Kartu diposisikan dari slot (`card.ability.ne_slot`, urutan baris-per-baris; baris 1 = Belakang). Skala per baris (Belakang 0.84, Tengah 0.92, Depan 1.0) lewat `T.scale`, dan baris saling menumpuk 50%.
+- `Card:collides_with_point` di-wrap: kartu yang digambar lebih kecil memakai ukuran gambarnya untuk tabrakan kursor.
+- `CardArea:draw` papan diganti: slot (node `Moveable` per petak, bisa di-hover/klik/fokus), lalu kartu papan + kartu yang ditempatkan dari belakang ke depan; kartu yang di-hover paling akhir.
+- `CardArea:emplace` di-wrap: kartu yang masuk papan mendapat slot pesanannya, atau slot otomatis (main cepat). Kartu yang keluar papan kehilangan data papan dan kembali ke ukuran normal.
+- Data kartu tersimpan di `card.ability`: `ne_slot`, `ne_residue`, `ne_since`, sehingga ikut `Card:save`. Ukuran papan tersimpan di config area.
+- `NE.Board.resize` mengubah `config.ne_board`. Kartu mempertahankan kolom dan jaraknya dari baris Depan; kartu di luar papan baru pindah ke slot kosong, atau ke discard jika penuh.
 
 ### 4.2 Alur main
 
-- Patch guard `if G.play and G.play.cards[1] then return end` (`state_events.lua`, `play_cards_from_highlighted`) → `if NE.Board.busy() then return end`.
-- `G.FUNCS.can_play` di-wrap: tombol aktif jika ada kartu staged atau highlighted, dan jumlah ≤ batas main.
-- Kartu staged sudah berada di `G.play` sebelum Play ditekan; kartu highlighted yang tersisa ditarik ke papan oleh kode vanilla lalu diberi slot oleh wrapper `emplace`.
-- `G.FUNCS.draw_from_play_to_discard`: patch baris `if (not v.shattered) and (not v.destroyed) then` → tambah `and not NE.Board.keeps(v)` (residu, kartu terfase, kartu beku).
-- Pratinjau: `CardArea:parse_highlighted` untuk `G.hand` di-wrap agar mengevaluasi papan + penempatan sementara.
+- **Penempatan (keputusan Fase 5):** kartu yang ditempatkan sebelum Play **tetap di `G.hand`** sebagai kartu terpilih, dengan slot dipesan di `NE.Board.stage`. Rancangan awal memindahkannya ke `G.play` lebih dulu; itu diganti karena akan melewatkan logika vanilla untuk kartu yang dimainkan (`drawing_to_play_area`, `times_played`, statistik, discard, tarot).
+  - `align_cards`/`draw` tangan mengeluarkan kartu itu dari kipas tangan dan menggambarnya di slotnya.
+  - `Card:highlight(false)` membatalkan penempatan.
+  - Seret (`Card:stop_drag`) dan klik slot menempatkan kartu.
+- Play: kode vanilla menarik kartu terpilih ke `G.play`; wrap `emplace` memberi slot pesanan atau slot otomatis.
+- Patch **L13a** (guard `play_cards_from_highlighted`), **L13b** (`can_use_consumeable`, `can_sell_card`), dan **L13c** (klik kanan): "`G.play` berisi kartu" → `NE.Board.busy()` (ada kartu yang bukan Residu).
+- Pemeriksaan kartu habis di `Game:update_selecting_hand`: wrap Lua, **bukan** patch. Patch akan memanggil `end_round()` setiap frame; wrap memanggilnya paling banyak sekali per ronde, saat hanya Residu yang tersisa.
+- `G.FUNCS.can_play` di-wrap: nonaktif jika kartu terpilih melebihi petak kosong.
+- `G.FUNCS.draw_from_play_to_discard`: patch **L14** menambah `and not NE.Board.keeps(v)`.
+  - `keeps` diputuskan sekali per tangan, dari kartu yang mencetak skor (context `after`; Fase 6 menggantinya dengan kartu formasi lewat `Board.consumed_provider`).
+  - Batas Residu = petak − batas main; Residu tertua keluar lebih dulu.
+- Discard Residu: kartu papan yang dipilih ikut `G.hand.highlighted` selama fungsi discard vanilla berjalan, dan `CardArea:remove_card` mengambilnya dari `G.play`. Semua efek discard berlaku.
+- Akhir ronde: wrap `G.FUNCS.draw_from_hand_to_discard` membuang seluruh papan.
+- Pratinjau: `CardArea:parse_highlighted` untuk `G.hand` mengevaluasi Residu + kartu terpilih. Fase 6 menggantinya dengan evaluator formasi.
 
 ### 4.3 Evaluator
 
@@ -226,7 +237,7 @@ Satu shader untuk semua 121 joker, dengan parameter per joker:
 
 ## 7. Daftar patch Lovely
 
-Prioritas file patch New Era: `0` (diterapkan setelah SMODS yang memakai −10/−5). Hasil cek: dari anchor L1–L15 dan L19–L20, tidak ada yang diubah oleh patch SMODS saat ini (hanya L2 berbagi titik sisip). L8 dan L18 berada di area yang diubah SMODS dan wajib dicocokkan dengan dump (simulasi dump: `lovely_sim.py` di scratchpad pengembangan, menerapkan patch SMODS dengan semantik Lovely).
+Prioritas file patch New Era: `0` (diterapkan setelah SMODS yang memakai −10/−5). Hasil cek: dari anchor L1–L15 dan L19–L20, tidak ada yang diubah oleh patch SMODS saat ini (hanya L2 berbagi titik sisip). L13a–c dan L14 (Fase 5) sudah dicek cocok tepat sekali pada simulasi dump. L8 dan L18 berada di area yang diubah SMODS dan wajib dicocokkan dengan dump (simulasi dump: `lovely_sim.py` di scratchpad pengembangan, menerapkan patch SMODS dengan semantik Lovely).
 
 | # | Target | Anchor | Tujuan |
 |---|---|---|---|
@@ -244,7 +255,9 @@ Prioritas file patch New Era: `0` (diterapkan setelah SMODS yang memakai −10/�
 | L10 | `functions/state_events.lua` | `if G.GAME.chips - G.GAME.blind.chips >= 0 then` (2 lokasi: `end_round`, `evaluate_round`) | `NE.Encounter.cleared()` |
 | L11 | `blind.lua` | `if self.boss and G.GAME.chips - G.GAME.blind.chips >= 0 then` | `NE.Encounter.cleared()` |
 | L12 | `functions/state_events.lua` | `local _handname, _played, _order = 'High Card', -1, 100` | Default `ne_spark` |
-| L13 | `functions/state_events.lua` | `if G.play and G.play.cards[1] then return end` | `NE.Board.busy()` |
+| L13a | `functions/state_events.lua` | `if G.play and G.play.cards[1] then return end` | `NE.Board.busy()` |
+| L13b | `card.lua` | `if not skip_check and ((G.play and #G.play.cards > 0) or` (`can_use_consumeable`) dan `if (G.play and #G.play.cards > 0) or` (`can_sell_card`) | `NE.Board.busy()` |
+| L13c | `engine/controller.lua` | `if (G.play and #G.play.cards > 0) or` (`queue_R_cursor_press`) | `NE.Board.busy()` |
 | L14 | `functions/state_events.lua` | `if (not v.shattered) and (not v.destroyed) then` (di `draw_from_play_to_discard`) | Residu tetap di papan |
 | ~~L15~~ | — | — | **Tidak dipakai (Fase 4).** Pertanda dipicu dari context SMODS `press_play` lewat event yang diantrikan (kartu sudah di `G.play`, sebelum `evaluate_play`) |
 | ~~L16~~ | — | — | **Tidak dipakai (Fase 4).** Rantai dipicu dari `initial_scoring_step` (`mod.calculate` berjalan setelah semua joker) |
@@ -253,7 +266,7 @@ Prioritas file patch New Era: `0` (diterapkan setelah SMODS yang memakai −10/�
 | L19 | `functions/button_callbacks.lua` | `G.STATE = G.STATES.SHOP` (di `cash_out`) | Kembali ke `NE_MAP` |
 | L20 | `functions/button_callbacks.lua` | `G.STATE = G.STATES.BLIND_SELECT` (di `toggle_shop`) | Kembali ke `NE_MAP` |
 
-Tanpa patch (override/wrap Lua): `number_format`, `score_number_scale`, `scale_number`, `math.*`, `check_and_set_high_score`, `inc_career_stat`, `CardArea:align_cards`, `CardArea:emplace`, `CardArea:parse_highlighted`, `G.FUNCS.can_play`, `G.FUNCS.draw_from_deck_to_hand`, `G.FUNCS.draw_from_discard_to_deck`, `create_UIBox_HUD` (panel mata uang), `create_UIBox_HUD_blind` (encounter), `SMODS.get_card_areas` (blind tambahan & area sementara), `SMODS.calculate_individual_effect` (key return baru).
+Tanpa patch (override/wrap Lua): `number_format`, `score_number_scale`, `scale_number`, `math.*`, `check_and_set_high_score`, `inc_career_stat`, `CardArea:align_cards`, `CardArea:emplace`, `CardArea:remove_card`, `CardArea:draw`, `CardArea:parse_highlighted`, `Card:click`, `Card:highlight`, `Card:stop_drag`, `Card:collides_with_point`, `Card:get_chip_bonus`/`get_chip_mult` (efek baris), `Controller:button_press_update` (LB/B papan), `end_round` + `Game:update_selecting_hand` (kartu habis), `G.FUNCS.can_play`, `G.FUNCS.can_discard`, `G.FUNCS.discard_cards_from_highlighted`, `G.FUNCS.play_cards_from_highlighted`, `G.FUNCS.draw_from_hand_to_discard`, `G.FUNCS.draw_from_deck_to_hand`, `G.FUNCS.draw_from_discard_to_deck`, `create_UIBox_HUD` (panel mata uang), `create_UIBox_HUD_blind` (encounter), `SMODS.get_card_areas` (blind tambahan & area sementara), `SMODS.calculate_individual_effect` (key return baru).
 
 Area vanilla yang **tidak** disentuh: `G.FUNCS.select_blind` (NE memakai jalurnya sendiri yang meniru `select_blind`: `new_round()` + `G.GAME.blind:set_blind(...)`), `engine/string_packer.lua`, `engine/save_manager.lua`.
 
@@ -270,7 +283,8 @@ Area vanilla yang **tidak** disentuh: `G.FUNCS.select_blind` (NE memakai jalurny
 | Data | Lokasi | Mekanisme |
 |---|---|---|
 | Papan, Tangan/Dek Bayangan, Kamui, dll. | CardArea di `G.*` | `save_run` vanilla mengiterasi semua CardArea; dibuat di `custom_card_areas` sebelum load |
-| Slot kartu, stiker, UID kartu | `card.ability.ne_*` | `Card:save` menyimpan `ability` utuh |
+| Slot kartu (`ne_slot`, `ne_residue`, `ne_since`), stiker, UID kartu | `card.ability.ne_*` | `Card:save` menyimpan `ability` utuh. Kartu yang ditempatkan sebelum Play tidak disimpan sebagai penempatan (save hanya terjadi di antara tangan) |
+| Ukuran papan | `G.play.config.ne_board` | Ikut `CardArea:save`; save lama mendapat 5×3 setelah load |
 | Peta, encounter, mata uang, aturan, statistik, graveyard, underworld | `G.GAME.newera` (data polos) | Ikut `GAME` |
 | Big number | di mana saja | Pack `neb:` di `recursive_table_cull`, rehydrate di L4 |
 | State `NE_MAP` | `saveTable.STATE` | Dipulihkan vanilla; `NE.Map.update` membangun UI dari data |
@@ -303,7 +317,7 @@ Profiling: `NE.Prof` (wrapper `love.timer.getTime`) di titik-titik utama + overl
 |---|---|
 | Update Balatro 1.1 mengubah baris anchor | Anchor pendek & stabil; daftar L1–L20 diuji ulang saat rilis |
 | Update SMODS mengubah baris (dump) | Pin versi; uji ulang L8 dan L18 setiap upgrade. Fase skor memakai context SMODS, bukan anchor |
-| Layout papan 5×3 terlalu sempit di layar 16:9 | Skala kartu papan dapat dikonfigurasi; prototipe layout paling awal di Fase 5 |
+| Layout papan 5×3 terlalu sempit di layar 16:9 | Fase 5: tata letak dihitung dari ruang antara joker dan tangan (ruang game tetap 20×11.5 di semua rasio layar; 4:3 hanya letterbox). Opsi config "kartu papan lebih kecil" (85%) |
 | Rewind/checkpoint memuat ulang run | Memakai jalur load vanilla; diuji dengan save/load bolak-balik |
 | `__eq` cdata vs number | Tes runtime di Fase 3; semua kode NE memakai `NE.Big.eq` |
 | Performa ante akhir (angka hiper + banyak trigger) | Mutasi in-place, coroutine slicing, cache format |

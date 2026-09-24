@@ -290,10 +290,14 @@ return function(T)
     end)
 
     test('big: Lovely patches apply to the anchors', function()
-        eq(#M.patch_results, 5, 'five pattern patches found for the test sources')
+        local n = 0
         for _, r in ipairs(M.patch_results) do
-            eq(r.matches, 1, 'one match: ' .. r.pattern:sub(1, 50))
+            if r.file:match('10_bignum%.toml$') then
+                n = n + 1
+                eq(r.matches, 1, 'one match: ' .. r.pattern:sub(1, 50))
+            end
         end
+        eq(n, 5, 'five NE.Big pattern patches found their test source')
     end)
 
     test('big: save and load keep values (L6 + STR_UNPACK)', function()
@@ -323,12 +327,12 @@ return function(T)
         check(B.is(G.GAME.chips) and B.eq(G.GAME.chips, '1e600'), 'start_run rehydrates culled tables')
 
         -- fallback when the Lovely patch is missing
-        M.load_patch_sources(true)
+        M.load_patch_sources(true, 'functions/misc_functions.lua')
         eq(B.ensure_cull(), 'fallback', 'unpatched cull detected')
         local c = recursive_table_cull({ x = B.new(5), o = M.new_object(), n = { y = B.new('1e400') } })
         check(type(c.x) == 'string' and type(c.n.y) == 'string', 'fallback packs Big values')
         eq(c.o, '"MANUAL_REPLACE"', 'fallback replaces objects')
-        M.load_patch_sources()
+        M.load_patch_sources(false, 'functions/misc_functions.lua')
         eq(B.ensure_cull(), 'lovely', 'patched cull detected again')
     end)
 

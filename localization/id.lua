@@ -9,7 +9,7 @@ return {
                     'dan 121 joker crossover dalam tiga rank:',
                     '{C:inactive}Unranked{}, {C:red}Demonic{}, dan {C:gold}Heavenly{}.',
                     ' ',
-                    '{C:inactive}Build pengembangan (Fase 4: skor & fase).{}',
+                    '{C:inactive}Build pengembangan (Fase 5: papan).{}',
                 },
             },
         },
@@ -120,6 +120,7 @@ return {
             ne_cfg_hide_blinds = 'Sembunyikan blind vanilla',
             ne_cfg_debug = 'Alat debug (F9 / F10)',
             ne_cfg_test_jokers = 'Joker uji di pool',
+            ne_cfg_board_small = 'Kartu papan lebih kecil',
             ne_cfg_note = 'Planet/blind baru berlaku mulai Fase 6/10',
 
             ne_cheat_title = 'Cheat New Era',
@@ -145,6 +146,10 @@ return {
             ne_cheat_give_aura = 'Beri Uji: Aura',
             ne_cheat_give_phases = 'Beri Uji: Fase',
             ne_cheat_currency = '+5 tiap mata uang',
+            ne_cheat_board_fill = 'Papan: +4 Residu',
+            ne_cheat_board_size = 'Papan: ukuran 5x3/6x4/4x2',
+            ne_cheat_board_shuffle = 'Papan: acak Residu',
+            ne_cheat_board_clear = 'Papan: kosongkan',
 
             ne_msg_omen = 'Pertanda!',
             ne_msg_chain = 'Rantai!',

@@ -27,6 +27,11 @@ local MODULES = {
     'src/content/colours.lua',
     -- run currencies
     'src/economy/currency.lua',
+    -- board (G.play as a 5 x 3 grid)
+    'src/board/grid.lua',
+    'src/board/board_area.lua',
+    'src/board/placement.lua',
+    'src/board/controller.lua',
     -- scoring
     'src/scoring/operators.lua',
     'src/scoring/aura.lua',
